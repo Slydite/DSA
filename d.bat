@@ -1,58 +1,48 @@
 @echo off
-SETLOCAL
+SETLOCAL EnableDelayedExpansion
 
 :: --- Configuration ---
-SET MAIN_BRANCH=main
+SET "MAIN_BRANCH=main"
 
 :: --- Script Logic ---
 
-:: 1. Get to a clean state on the main branch
-echo Switching to %MAIN_BRANCH% and pulling latest changes...
+:: 1. Go to the main branch and make sure it's up to date.
+echo [Step 1] Switching to %MAIN_BRANCH% and pulling latest changes...
 git checkout %MAIN_BRANCH%
-IF %ERRORLEVEL% NEQ 0 (
-    echo Failed to checkout %MAIN_BRANCH%. Aborting.
-    goto :eof
-)
 git pull origin %MAIN_BRANCH%
 
-:: 2. Fetch remote branches
-echo Fetching remote branches...
-git fetch --prune
+:: 2. Crucial: Fetch all remote branches so we know about the agents' work.
+echo [Step 2] Fetching all remote branches and pruning deleted ones...
+git fetch origin --prune
 
-:: 3. Loop through branches and merge them
+:: 3. Loop through REMOTE branches and merge them
 echo.
-echo Starting merge process...
+echo [Step 3] Starting merge process for REMOTE branches...
 echo ====================================================
 
-FOR /F "tokens=*" %%b IN ('git branch') DO (
-    SET branch_name=%%b
-    
-    :: The CMD shell variable expansion is a bit tricky, so we enable delayed expansion
-    SETLOCAL EnableDelayedExpansion
-    
-    :: Clean up the branch name (remove the * and trim spaces)
-    SET cleaned_name=!branch_name:* =!
-    
-    IF NOT "!cleaned_name!" == "%MAIN_BRANCH%" (
+:: This is the key change. We list REMOTE branches (`-r`) and filter out the main one.
+:: We also filter out "HEAD ->" which can sometimes appear in the list.
+FOR /F "tokens=*" %%a IN ('git branch -r ^| findstr /v "HEAD" ^| findstr /v "%MAIN_BRANCH%"') DO (
+    :: This inner loop trims leading whitespace from the branch name.
+    FOR /F "tokens=*" %%b IN ("%%a") DO (
         echo.
-        echo Merging branch: !cleaned_name!
-        git merge --no-ff "!cleaned_name!" -m "Merge branch '!cleaned_name!'"
+        echo --- Merging remote branch: "%%b" ---
+        git merge --no-ff "%%b" -m "Merge branch '%%b'"
         IF !ERRORLEVEL! NEQ 0 (
-            echo FAILED to merge !cleaned_name!. Please resolve conflicts manually.
+            echo FAILED to merge "%%b". Please resolve conflicts manually.
             goto :eof
         )
     )
-    ENDLOCAL
 )
 
 :: 4. Push the final result
 echo ====================================================
 echo All branches merged successfully.
-echo Pushing %MAIN_BRANCH% to origin...
+echo [Step 4] Pushing %MAIN_BRANCH% to origin...
 git push origin %MAIN_BRANCH%
 
 echo.
 echo Done!
 
-ENDLOCAL
 :eof
+ENDLOCAL
