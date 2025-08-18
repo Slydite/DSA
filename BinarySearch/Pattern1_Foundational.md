@@ -68,13 +68,13 @@ def lower_bound(arr, x):
             low = mid + 1
     return ans
 ```
-#### Tricks/Gotchas
-- The implementation for `Upper Bound` is nearly identical, but the condition changes to `arr[mid] > x`.
+#### Related Problems
 - `Search Insert Position` is a direct application of `Lower Bound`.
+- The `Upper Bound` implementation is nearly identical, but the condition changes to `arr[mid] > x`.
 
 ---
 
-### 3. First and Last Occurrence of a Number
+### 3. Find the First or Last Occurrence of a Number
 `[EASY]` `#binary-search` `#lower-bound`
 
 #### Problem Statement
@@ -88,12 +88,27 @@ This is a perfect use case for lower and upper bounds.
 2.  **Last Occurrence:** The last occurrence of `x` can be found by searching for the `upper_bound(arr, x)` and subtracting 1. The `upper_bound` gives the index of the first element *greater than* `x`, so the element just before it must be the last occurrence of `x`.
 3.  Handle edge cases where the element is not found. If `lower_bound` points to an element that is not `x`, then `x` is not in the array.
 
+---
+
+### 4. Count Occurrences of a Number
+`[EASY]` `#binary-search` `#lower-bound` `#upper-bound`
+
+#### Problem Statement
+Given a sorted array with duplicates, count the number of occurrences of a number `x`.
+
+#### Implementation Overview
+This is a direct application of finding the first and last occurrences.
+1.  Find the index of the first occurrence using `lower_bound(arr, x)`.
+2.  Find the index of the last occurrence using `upper_bound(arr, x) - 1`.
+3.  If the element is not found, the count is 0.
+4.  Otherwise, the count is `last_occurrence - first_occurrence + 1`.
+
 #### Related Problems
-- **Count Occurrences:** This can be solved with `last_occurrence - first_occurrence + 1`.
+- `Find the First or Last Occurrence of a Number`
 
 ---
 
-### 4. Floor/Ceil in Sorted Array
+### 5. Floor/Ceil in Sorted Array
 `[MEDIUM]` `#binary-search`
 
 #### Problem Statement
@@ -101,5 +116,5 @@ This is a perfect use case for lower and upper bounds.
 - **Ceil:** Find the smallest number in a sorted array greater than or equal to `x`.
 
 #### Implementation Overview
-- **Ceil:** The ceil of `x` is a direct application of `lower_bound(arr, x)`.
-- **Floor:** The floor can be found with a binary search variation similar to lower bound. Keep track of a potential answer `ans` whenever `arr[mid] <= x` and continue searching in the right half (`low = mid + 1`) for a potentially larger value that still meets the condition.
+- **Ceil:** The ceil of `x` is a direct application of finding the `lower_bound` of `x`. The element at that index is the answer.
+- **Floor:** The floor can be found with a binary search variation. Keep track of a potential answer `ans` whenever `arr[mid] <= x`, and continue searching in the right half (`low = mid + 1`) for a potentially larger value that still meets the condition.
