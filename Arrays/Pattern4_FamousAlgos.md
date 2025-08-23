@@ -18,7 +18,7 @@ Given an array of size `N`, find the element that appears more than `N/2` times.
 While a hashmap can solve this in O(N) time and space, **Boyer-Moore's Voting Algorithm** provides an elegant O(N) time and O(1) space solution.
 1.  Initialize two variables: `candidate` to store the potential majority element and `count` to track its "votes".
 2.  Iterate through the array.
-3.  If `count` is 0, it means we have no active candidate, so we set the current element `num` as the new `candidate` and set its `count` to 1.
+3.  If `count` is 0, we set the current element `num` as the new `candidate` and set its `count` to 1.
 4.  If the current `num` is the same as our `candidate`, we increment `count`.
 5.  If the current `num` is different from our `candidate`, we decrement `count`. This is like a non-candidate canceling out a vote for the candidate.
 6.  The element remaining as the `candidate` at the end of the loop is the majority element. Since the problem guarantees a majority element exists, a second pass to verify its count is not strictly necessary.
@@ -31,11 +31,12 @@ def majority_element_n2(nums):
     for num in nums:
         if count == 0:
             candidate = num
-            count = 1
-        elif num == candidate:
+
+        if num == candidate:
             count += 1
         else:
             count -= 1
+
     return candidate
 ```
 
@@ -48,7 +49,7 @@ def majority_element_n2(nums):
 ---
 
 ### 18. Kadane's Algorithm, maximum subarray sum
-`[EASY]` `#dynamic-programming` `#kadanes-algorithm`
+`[MEDIUM]` `#dynamic-programming` `#kadanes-algorithm`
 
 #### Problem Statement
 Given an integer array, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.
@@ -60,36 +61,38 @@ Given an integer array, find the contiguous subarray (containing at least one nu
 #### Implementation Overview
 This is the classic application of **Kadane's Algorithm**. It's a dynamic programming approach that solves the problem in O(N) time and O(1) space.
 1.  Initialize two variables:
-    -   `max_so_far`: Stores the maximum sum found for any subarray yet. Initialize it to a very small number (or the first element).
-    -   `current_max`: Stores the maximum sum of a subarray ending at the current position.
+    -   `max_so_far`: Stores the maximum sum found for any subarray yet. Initialize it to the first element of the array.
+    -   `current_sum`: Stores the sum of the subarray ending at the current position. Initialize to 0.
 2.  Iterate through the array. For each element `num`:
-    -   Update `current_max` by adding `num` to it.
-    -   `current_max` is the larger of the current element itself or the sum of the current element and the previous `current_max`. This is `current_max = max(num, current_max + num)`. A simpler way to think about this is: if `current_max` becomes negative, reset it to 0 (and start a new subarray from the next element).
-    -   Update `max_so_far` by comparing it with `current_max`: `max_so_far = max(max_so_far, current_max)`.
-3.  The final `max_so_far` is the answer.
+    -   Add the current `num` to `current_sum`.
+    -   Update `max_so_far = max(max_so_far, current_sum)`.
+    -   If `current_sum` becomes negative, it means the subarray ending here is a "burden" to any future subarray. We are better off starting a new subarray from the next element. So, if `current_sum < 0`, we reset it to `0`.
 
 #### Python Code Snippet
 ```python
 def max_subarray_sum(nums):
-    max_so_far = float('-inf')
-    current_max = 0
+    max_so_far = nums[0]
+    current_sum = 0
 
     for num in nums:
-        current_max += num
-        if current_max > max_so_far:
-            max_so_far = current_max
-        if current_max < 0:
-            current_max = 0
+        current_sum += num
+        if current_sum > max_so_far:
+            max_so_far = current_sum
+
+        if current_sum < 0:
+            current_sum = 0
 
     return max_so_far
 ```
 
 #### Tricks/Gotchas
-- **Handling All-Negative Arrays:** The version above handles this correctly if `max_so_far` is initialized to the first element instead of `float('-inf')`. If all numbers are negative, the answer should be the largest (least negative) number. The provided snippet works because `max_so_far` will capture the largest single element in the first `if` before `current_max` is potentially reset.
+- **Initialization:** Initializing `max_so_far` with the first element is crucial for handling arrays where all numbers are negative. In that case, the answer is the largest (least negative) number.
+- **Order of Operations:** It's important to update `max_so_far` *before* resetting `current_sum`. This ensures that even if the array contains only one negative number, it is captured correctly.
 
 #### Related Problems
 - 19. Print subarray with maximum subarray sum
 - 40. Maximum Product Subarray
+- 20. Stock Buy and Sell (Buy once, sell once)
 
 ---
 
@@ -105,45 +108,45 @@ An extension of Kadane's algorithm, where you also need to print the subarray th
 
 #### Implementation Overview
 We augment the standard Kadane's algorithm by adding pointers to track the start and end of the maximum subarray found so far.
-1.  Initialize `max_so_far`, `current_max` as before.
+1.  Initialize `max_so_far`, `current_sum` as before.
 2.  Initialize `start_index = 0`, `end_index = 0` to store the bounds of the final answer.
-3.  Initialize `current_start = 0` to track the beginning of the subarray corresponding to `current_max`.
+3.  Initialize `current_start = 0` to track the beginning of the subarray corresponding to `current_sum`.
 4.  Iterate through the array with index `i`.
-    -   Update `current_max += nums[i]`.
-    -   If `current_max > max_so_far`:
-        -   Update `max_so_far = current_max`.
+    -   Add `nums[i]` to `current_sum`.
+    -   If `current_sum > max_so_far`:
+        -   Update `max_so_far = current_sum`.
         -   Update the final pointers: `start_index = current_start`, `end_index = i`.
-    -   If `current_max < 0`:
-        -   Reset `current_max = 0`.
+    -   If `current_sum < 0`:
+        -   Reset `current_sum = 0`.
         -   A new potential subarray will start from the next element, so update `current_start = i + 1`.
 5.  After the loop, the subarray is `nums[start_index : end_index + 1]`.
 
 #### Python Code Snippet
 ```python
 def max_subarray_print(nums):
-    max_so_far = float('-inf')
-    current_max = 0
+    max_so_far = nums[0]
+    current_sum = 0
     start_index = 0
     end_index = 0
     current_start = 0
 
     for i, num in enumerate(nums):
-        current_max += num
+        current_sum += num
 
-        if current_max > max_so_far:
-            max_so_far = current_max
+        if current_sum > max_so_far:
+            max_so_far = current_sum
             start_index = current_start
             end_index = i
 
-        if current_max < 0:
-            current_max = 0
+        if current_sum < 0:
+            current_sum = 0
             current_start = i + 1
 
     return nums[start_index : end_index + 1]
 ```
 
 #### Tricks/Gotchas
-- **Index Tracking:** The logic for updating `current_start` is the key addition. It must be updated only when the current subarray is "abandoned" (i.e., its sum becomes negative).
+- **Index Tracking:** The logic for updating `current_start` is the key addition. It must be updated only when the current subarray's sum becomes negative, indicating it's time to start fresh.
 
 #### Related Problems
 - 18. Kadane's Algorithm, maximum subarray sum
@@ -173,25 +176,25 @@ This problem is solved by a specific, multi-step algorithm.
 def next_permutation(nums):
     n = len(nums)
     pivot_index = -1
-    # Step 1: Find the pivot
+    # Step 1: Find the pivot (the first element from right that is smaller than its right neighbor)
     for i in range(n - 2, -1, -1):
         if nums[i] < nums[i+1]:
             pivot_index = i
             break
 
-    # Step 2: Handle last permutation
+    # Step 2: If no pivot exists, the array is in descending order, reverse it
     if pivot_index == -1:
         nums.reverse()
         return
 
-    # Step 3: Find successor
+    # Step 3: Find the successor to the pivot (the smallest element to the right of pivot that is larger than pivot)
     for i in range(n - 1, pivot_index, -1):
         if nums[i] > nums[pivot_index]:
-            # Step 4: Swap
+            # Step 4: Swap pivot and successor
             nums[i], nums[pivot_index] = nums[pivot_index], nums[i]
             break
 
-    # Step 5: Reverse suffix
+    # Step 5: Reverse the suffix to the right of the pivot
     left, right = pivot_index + 1, n - 1
     while left < right:
         nums[left], nums[right] = nums[right], nums[left]
@@ -204,7 +207,7 @@ def next_permutation(nums):
 - **In-place:** The algorithm must modify the array in-place.
 
 #### Related Problems
-- None in this list.
+- Previous Permutation
 
 ---
 
@@ -221,16 +224,16 @@ Given an integer array of size `N`, find all elements that appear more than `N/3
 #### Implementation Overview
 This is an extension of Boyer-Moore's Voting Algorithm. The key insight is that there can be at most two elements that appear more than `N/3` times.
 1.  Initialize two candidates (`candidate1`, `candidate2`) and two counters (`count1`, `count2`).
-2.  **First Pass:** Iterate through the array to find the two potential candidates. For each `num`:
+2.  **First Pass (Finding Candidates):** Iterate through the array to find the two potential candidates.
     -   If `num` matches `candidate1`, increment `count1`.
     -   Else if `num` matches `candidate2`, increment `count2`.
     -   Else if `count1` is 0, set `candidate1 = num` and `count1 = 1`.
     -   Else if `count2` is 0, set `candidate2 = num` and `count2 = 1`.
     -   Else, decrement both `count1` and `count2`.
-3.  **Second Pass:** The first pass gives us two *potential* candidates, but they are not guaranteed to be majority elements. We must verify.
+3.  **Second Pass (Verification):** The first pass gives us two *potential* candidates. We must verify their counts.
     -   Reset `count1` and `count2` to 0.
-    -   Iterate through the array again, counting the actual occurrences of the final `candidate1` and `candidate2`.
-4.  **Final Check:** Check if `count1 > N/3` and `count2 > N/3`. Add the qualifying candidates to the result list.
+    -   Iterate through the array again, counting the actual occurrences of `candidate1` and `candidate2`.
+4.  **Final Check:** Check if `count1 > N/3` and `count2 > N/3`. Add the qualifying candidates to the result list, ensuring not to add duplicates if `candidate1 == candidate2`.
 
 #### Python Code Snippet
 ```python
@@ -273,8 +276,8 @@ def majority_element_n3(nums):
 ```
 
 #### Tricks/Gotchas
-- **Verification Pass:** The second pass is not optional here.
-- **Distinct Candidates:** Ensure that if `candidate1` and `candidate2` end up being the same, you don't add the same number to the result list twice.
+- **Verification Pass:** The second pass is not optional. The first pass only identifies candidates, not guarantees.
+- **Distinct Candidates:** The check `candidate1 != candidate2` is important to avoid adding the same number to the result list twice if both candidates happen to be the same number.
 
 #### Related Problems
 - 17. Majority Element (>n/2 times)
@@ -282,7 +285,7 @@ def majority_element_n3(nums):
 ---
 
 ### 40. Maximum Product Subarray
-`[EASY]` `#dynamic-programming` `#kadanes-algorithm`
+`[MEDIUM]` `#dynamic-programming` `#kadanes-algorithm`
 
 #### Problem Statement
 Given an integer array, find a contiguous non-empty subarray within the array that has the largest product, and return the product.
@@ -294,15 +297,15 @@ Given an integer array, find a contiguous non-empty subarray within the array th
 - **Output:** `0`
 
 #### Implementation Overview
-This is a variation of Kadane's algorithm. The standard approach doesn't work directly because of negative numbers (a large negative product can become a large positive product if multiplied by another negative number).
+This is a variation of Kadane's algorithm. The standard approach doesn't work directly because multiplying by a negative number can flip the largest product to the smallest and vice-versa.
 1.  The key is to track both the maximum product and the minimum product ending at the current position.
-2.  Initialize `max_prod` (max product ending here), `min_prod` (min product ending here), and `result` (global max product) to the first element of the array.
-3.  Iterate from the second element (`i = 1` to `n-1`). For each `num`:
-    -   A new `max_prod` can be formed by `num`, `num * old_max_prod`, or `num * old_min_prod`.
-    -   If `num` is negative, it will swap the roles of `max_prod` and `min_prod`. So, we can swap them before calculation.
-    -   `max_prod = max(num, num * max_prod)`
-    -   `min_prod = min(num, num * min_prod)`
-    -   Update the overall `result` with the new `max_prod`.
+2.  Initialize `max_so_far` (global max product), `max_ending_here`, and `min_ending_here` to the first element of the array.
+3.  Iterate from the second element. For each `num`:
+    -   Calculate the potential new max and min. The new max can be `num`, `num * old_max`, or `num * old_min`.
+    -   Store the old `max_ending_here` in a temp variable because it's needed for the `min_ending_here` calculation.
+    -   `max_ending_here = max(num, num * max_ending_here, num * min_ending_here)`
+    -   `min_ending_here = min(num, num * temp_max, num * min_ending_here)`
+    -   Update the overall `max_so_far` with the new `max_ending_here`.
 
 #### Python Code Snippet
 ```python
@@ -310,28 +313,26 @@ def max_product_subarray(nums):
     if not nums:
         return 0
 
-    max_prod = nums[0]
-    min_prod = nums[0]
-    result = nums[0]
+    max_so_far = nums[0]
+    max_ending_here = nums[0]
+    min_ending_here = nums[0]
 
     for i in range(1, len(nums)):
         num = nums[i]
-        # When we see a negative number, the old max becomes the new min and vice-versa
-        if num < 0:
-            max_prod, min_prod = min_prod, max_prod
 
-        # Update max and min product ending at current position
-        max_prod = max(num, max_prod * num)
-        min_prod = min(num, min_prod * num)
+        # We need to store the old max_ending_here to calculate the new min_ending_here
+        temp_max = max_ending_here
 
-        # Update overall result
-        result = max(result, max_prod)
+        max_ending_here = max(num, num * temp_max, num * min_ending_here)
+        min_ending_here = min(num, num * temp_max, num * min_ending_here)
 
-    return result
+        max_so_far = max(max_so_far, max_ending_here)
+
+    return max_so_far
 ```
 
 #### Tricks/Gotchas
-- **Zeroes:** A zero will reset the `max_prod` and `min_prod` chain. The logic `max(num, max_prod * num)` handles this correctly, as a new subarray starting with `num` will be considered.
+- **Zeroes:** A zero will reset the product chain. The logic `max(num, ...)` handles this correctly by allowing a new subarray to start at `num`.
 - **Tracking Min Product:** The core insight is that a large negative number (the minimum product) is valuable, as it can become the maximum product if another negative number appears.
 
 #### Related Problems

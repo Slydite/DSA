@@ -13,10 +13,12 @@ Given an array of integers, find the largest element in it.
 *Example:*
 - **Input:** `arr = [2, 5, 1, 3, 0]`
 - **Output:** `5`
+- **Input:** `arr = [-1, -5, -2]`
+- **Output:** `-1`
 
 #### Implementation Overview
 The logic is to maintain a variable, `max_element`, that stores the largest element found so far.
-1. Initialize `max_element` with the first element of the array.
+1. Initialize `max_element` with the first element of the array or negative infinity.
 2. Iterate through the array from the second element (`i = 1` to `n-1`).
 3. In each iteration, compare the current element `arr[i]` with `max_element`.
 4. If `arr[i]` is greater than `max_element`, update `max_element` to `arr[i]`.
@@ -51,15 +53,17 @@ Given an array of integers, find the second largest element. If no second larges
 *Example:*
 - **Input:** `arr = [12, 35, 1, 10, 34, 1]`
 - **Output:** `34`
+- **Input:** `arr = [10, 10, 10]`
+- **Output:** `-1`
 
 #### Implementation Overview
 We can find the second largest element in a single pass. The idea is to maintain two variables: `largest` and `second_largest`.
-1. Initialize `largest` to the first element and `second_largest` to a very small number (or handle it logically).
-2. Iterate through the array from the second element.
-3. For each element `arr[i]`:
-    - If `arr[i]` is greater than `largest`, it becomes the new largest. The old `largest` becomes the new `second_largest`.
-    - Else, if `arr[i]` is smaller than `largest` but greater than `second_largest`, it becomes the new `second_largest`.
-4. This ensures we correctly track both values, even with duplicates.
+1. Initialize `largest` and `second_largest` to a very small number (like `float('-inf')`).
+2. Iterate through the array.
+3. For each element `num` in the array:
+    - If `num` is greater than `largest`, it means we have found a new largest element. We update `second_largest` to the old `largest`, and `largest` to `num`.
+    - Else, if `num` is smaller than `largest` but greater than `second_largest`, it becomes the new `second_largest`.
+4. After the loop, if `second_largest` is still `float('-inf')`, it means no second largest element was found.
 
 #### Python Code Snippet
 ```python
@@ -72,17 +76,20 @@ def find_second_largest(arr):
 
   for num in arr:
     if num > largest:
+      # Found a new largest, the old largest is now the second largest
       second_largest = largest
       largest = num
-    elif num > second_largest and num != largest:
+    elif num > second_largest and num < largest:
+      # Found a new second largest
       second_largest = num
 
   return second_largest if second_largest != float('-inf') else -1
 ```
 
 #### Tricks/Gotchas
-- **Duplicates:** The condition `num != largest` is crucial to handle cases like `[10, 10, 5]` where `10` is the largest and `5` is the second largest. Without it, `second_largest` could become `10`.
-- **No Second Largest:** If all elements are the same (e.g., `[5, 5, 5]`), there is no second largest. The code should handle this, for instance by returning -1.
+- **Distinctness:** The condition `num < largest` is important to correctly handle arrays with duplicate largest elements like `[10, 5, 10]`.
+- **Initialization:** Initializing with `float('-inf')` simplifies the logic and correctly handles negative numbers in the array.
+- **No Second Largest:** If all elements are the same (e.g., `[5, 5, 5]`), there is no second largest. The check at the end handles this.
 
 #### Related Problems
 - 1. Largest Element in an Array
@@ -122,7 +129,7 @@ def is_sorted(arr):
 
 #### Tricks/Gotchas
 - **Edge Cases:** Empty arrays and single-element arrays are considered sorted. The code handles this correctly.
-- **Strictly Increasing vs. Non-decreasing:** The problem usually implies non-decreasing (i.e., `[1, 2, 2, 3]` is sorted). Be clear on this requirement.
+- **Strictly Increasing vs. Non-decreasing:** The problem usually implies non-decreasing (i.e., `[1, 2, 2, 3]` is sorted). Be clear on this requirement. If strictly increasing is needed, the check becomes `arr[i] >= arr[i+1]`.
 
 #### Related Problems
 - None in this list.
@@ -133,7 +140,7 @@ def is_sorted(arr):
 `[EASY]` `#traversal` `#inplace`
 
 #### Problem Statement
-Given an array, rotate its elements to the left by one position. The first element moves to the last position.
+Given an array, rotate its elements to the left by one position. The first element moves to the last position. This should be done in-place.
 
 *Example:*
 - **Input:** `arr = [1, 2, 3, 4, 5]`
@@ -161,7 +168,7 @@ def left_rotate_by_one(arr):
 ```
 
 #### Tricks/Gotchas
-- **In-place Modification:** The goal is usually to modify the array in-place to save memory.
+- **In-place Modification:** The goal is usually to modify the array in-place to save memory, which this solution does.
 - **Edge Case:** An array with 0 or 1 elements does not need rotation.
 
 #### Related Problems
@@ -178,6 +185,8 @@ Given an array of integers and a target value, find the index of the first occur
 *Example:*
 - **Input:** `arr = [4, 5, 6, 7, 0, 1, 2]`, `target = 0`
 - **Output:** `4`
+- **Input:** `arr = [1, 2, 3]`, `target = 4`
+- **Output:** `-1`
 
 #### Implementation Overview
 This is the most straightforward search algorithm.
@@ -197,10 +206,10 @@ def linear_search(arr, target):
 
 #### Tricks/Gotchas
 - **Simplicity:** Don't overthink it. Linear search is the brute-force approach and is efficient for small or unsorted arrays.
-- **Return Value:** Be clear about what to return if the element is not found (commonly -1, but could be `None` or an exception).
+- **Return Value:** Be clear about what to return if the element is not found (commonly -1, but could be `None` or an exception depending on requirements).
 
 #### Related Problems
-- None in this list.
+- Binary Search (for sorted arrays)
 
 ---
 
@@ -224,9 +233,9 @@ There are two common and efficient approaches.
 
 **2. XOR Method:**
 1. The XOR property `x ^ x = 0` is key.
-2. XOR all numbers from 1 to `N`. Let this be `xor1`.
-3. XOR all elements in the given array. Let this be `xor2`.
-4. The result of `xor1 ^ xor2` will be the missing number, as all other numbers will appear twice in the combined set and cancel each other out.
+2. XOR all numbers from 1 to `N`. Let this be `xor_all_N`.
+3. XOR all elements in the given array. Let this be `xor_array`.
+4. The result of `xor_all_N ^ xor_array` will be the missing number, as all other numbers will appear twice in the combined set and cancel each other out.
 
 #### Python Code Snippet (Summation)
 ```python
@@ -234,6 +243,20 @@ def find_missing_number_sum(arr, N):
   expected_sum = N * (N + 1) // 2
   actual_sum = sum(arr)
   return expected_sum - actual_sum
+```
+
+#### Python Code Snippet (XOR)
+```python
+def find_missing_number_xor(arr, N):
+    xor_all_N = 0
+    for i in range(1, N + 1):
+        xor_all_N ^= i
+
+    xor_array = 0
+    for num in arr:
+        xor_array ^= num
+
+    return xor_all_N ^ xor_array
 ```
 
 #### Tricks/Gotchas
@@ -254,7 +277,7 @@ Given a binary array (containing only 0s and 1s), find the maximum number of con
 
 *Example:*
 - **Input:** `arr = [1, 1, 0, 1, 1, 1, 0, 1, 1]`
-- **Output:** `3`
+- **Output:** `3` (The streak of three 1s is the longest).
 
 #### Implementation Overview
 This can be solved in a single pass.
@@ -264,7 +287,7 @@ This can be solved in a single pass.
 4. If the current element is `0`:
     - The streak is broken. Compare `current_count` with `max_count` and update `max_count` if `current_count` is larger.
     - Reset `current_count` to `0`.
-5. After the loop, there's a final check: `max_count = max(max_count, current_count)`. This is crucial for cases where the longest streak of 1s is at the end of the array.
+5. After the loop, there's a final check: `max_count = max(max_count, current_count)`. This is crucial for cases where the longest streak of 1s is at the very end of the array.
 
 #### Python Code Snippet
 ```python
@@ -277,6 +300,7 @@ def max_consecutive_ones(arr):
     else:
       max_count = max(max_count, current_count)
       current_count = 0
+  # Final check in case the array ends with a streak of ones
   max_count = max(max_count, current_count)
   return max_count
 ```
@@ -285,7 +309,7 @@ def max_consecutive_ones(arr):
 - **Final Update:** Forgetting the final `max(max_count, current_count)` after the loop is a common mistake. It handles inputs like `[1, 1, 1]`.
 
 #### Related Problems
-- None in this list.
+- This is a simple form of a sliding window problem.
 
 ---
 
@@ -302,28 +326,28 @@ Given a non-empty array of integers, every element appears twice except for one.
 #### Implementation Overview
 This problem has a beautiful and highly efficient solution using the bitwise XOR operator.
 - The XOR operation has two key properties: `A ^ A = 0` (XORing a number with itself results in zero) and `A ^ 0 = A` (XORing a number with zero results in the number itself).
-- It is also commutative and associative.
-1. Initialize a variable, `single_element`, to 0.
+- It is also commutative and associative, meaning the order of operations does not matter.
+1. Initialize a variable, `result`, to 0.
 2. Iterate through every number in the array.
-3. In each iteration, XOR `single_element` with the current number: `single_element = single_element ^ num`.
-4. Because all duplicate numbers will cancel each other out (`num ^ num = 0`), the final value of `single_element` will be the one number that did not have a pair.
+3. In each iteration, XOR `result` with the current number: `result ^= num`.
+4. Because all duplicate numbers will cancel each other out (`num ^ num = 0`), the final value of `result` will be the one number that did not have a pair.
 
 #### Python Code Snippet
 ```python
 def find_single_number(arr):
-  single_element = 0
+  result = 0
   for num in arr:
-    single_element ^= num
-  return single_element
+    result ^= num
+  return result
 ```
 
 #### Tricks/Gotchas
-- **The XOR Trick:** This is the core of the problem. While a hashmap could also solve it, it would use extra space. The XOR solution is O(N) time and O(1) space, making it optimal.
-- **Problem Constraints:** This trick only works if all other numbers appear exactly twice.
+- **The XOR Trick:** This is the core of the problem. While a hashmap could also solve it in O(N) time, it would use O(N) space. The XOR solution is optimal with O(N) time and O(1) space.
+- **Problem Constraints:** This trick only works if all other numbers appear exactly twice. If they appear, say, three times, a different bitwise approach is needed.
 
 #### Related Problems
 - 10. Find missing number in an array
-- 30. Majority Element (n/3 times) (more advanced bitwise/voting)
+- Find the two numbers that appear once
 
 ---
 
@@ -331,34 +355,51 @@ def find_single_number(arr):
 `[EASY]` `#traversal` `#greedy`
 
 #### Problem Statement
-You are given an array `prices` where `prices[i]` is the price of a given stock on the `i`-th day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve. If you cannot achieve any profit, return 0.
+You are given an array `prices` where `prices[i]` is the price of a given stock on the `i`-th day. You want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock. Return the maximum profit you can achieve. If you cannot achieve any profit, return 0.
 
-*This problem has multiple variations. The version on the list implies you can transact multiple times (buy and sell on the same day is allowed), which simplifies to a greedy approach.*
+*Example:*
+- **Input:** `prices = [7, 1, 5, 3, 6, 4]`
+- **Output:** `5` (Buy on day 2 (price=1) and sell on day 5 (price=6), profit = 6-1=5).
+- **Input:** `prices = [7, 6, 4, 3, 1]`
+- **Output:** `0` (No profitable transaction is possible).
 
-#### Implementation Overview (Multiple Transactions)
-The key insight is that you can accumulate profits from all upward price movements.
-1. Initialize `total_profit = 0`.
-2. Iterate through the `prices` array from the second day (`i = 1` to `n-1`).
-3. If `prices[i]` is greater than `prices[i-1]`, it represents a profitable one-day transaction.
-4. Add the difference `prices[i] - prices[i-1]` to `total_profit`.
-5. This works because a long upward trend `(p3 - p0)` is the sum of its smaller parts `(p1 - p0) + (p2 - p1) + (p3 - p2)`.
+#### Implementation Overview (Buy Once, Sell Once)
+This is a classic problem that can be solved in a single pass. The key is to keep track of the minimum price seen so far and the maximum profit found.
+1. Initialize `min_price` to a very large number (or `prices[0]`).
+2. Initialize `max_profit` to 0.
+3. Iterate through the `prices` array.
+4. For each `price`:
+    - If `price` is less than `min_price`, update `min_price` to `price`. This is a new best day to buy.
+    - Otherwise, calculate the potential profit if we were to sell today: `profit = price - min_price`.
+    - If this `profit` is greater than `max_profit`, update `max_profit`.
+5. After the loop, `max_profit` holds the answer.
 
 #### Python Code Snippet
 ```python
-def max_profit_multiple(prices):
-  total_profit = 0
-  for i in range(1, len(prices)):
-    if prices[i] > prices[i-1]:
-      total_profit += prices[i] - prices[i-1]
-  return total_profit
+def max_profit_single(prices):
+  if not prices:
+    return 0
+
+  min_price = float('inf')
+  max_profit = 0
+
+  for price in prices:
+    if price < min_price:
+      min_price = price
+    else:
+      profit = price - min_price
+      if profit > max_profit:
+        max_profit = profit
+
+  return max_profit
 ```
 
 #### Tricks/Gotchas
-- **Problem Variation:** Be very careful which version of the "Stock Buy and Sell" problem you are solving. The "buy once, sell once" version requires a different approach (tracking min price so far).
-- **Greedy Choice:** The greedy choice of taking every small profit is optimal for the multiple-transaction version.
+- **Problem Variation:** This is the "buy once, sell once" version. A different version allows multiple transactions, which has a different greedy solution. Always clarify which version is being asked.
+- **Logic Flow:** The logic works because we always update our `min_price` to the lowest point. Any subsequent higher price is a candidate for a sale, and we just need to track the best one.
 
 #### Related Problems
-- 18. Kadane's Algorithm, maximum subarray sum (The "buy once, sell once" variant is related to Kadane's).
+- 18. Kadane's Algorithm (Maximum Subarray Sum) - This problem can be transformed into Kadane's by looking at the array of daily price differences.
 
 ---
 
@@ -375,13 +416,13 @@ Given an integer array, find all the "leaders". An element is a leader if it is 
 #### Implementation Overview
 A naive solution would be O(N^2) (for each element, scan its right side). The optimal solution is O(N) by traversing from right to left.
 1. Initialize an empty list `leaders` to store the result.
-2. Initialize a variable `max_from_right` to the smallest possible value. The rightmost element `arr[n-1]` is always a leader, so we can start with it.
-3. Add `arr[n-1]` to `leaders` and set `max_from_right = arr[n-1]`.
+2. The rightmost element `arr[n-1]` is always a leader, so we start there.
+3. Initialize a variable `max_from_right` with the value of the rightmost element. Add this element to the `leaders` list.
 4. Iterate through the array from the second-to-last element down to the first (`i = n-2` down to `0`).
-5. For each element `arr[i]`, if it is greater than `max_from_right`, it is a leader.
-    - Add `arr[i]` to the `leaders` list.
-    - Update `max_from_right = arr[i]`.
-6. Since we traversed from the right, the `leaders` list is in reverse order. Reverse it before returning.
+5. For each element `arr[i]`, if it is greater than `max_from_right`, it is a leader because it's greater than the largest element to its right.
+    - If it's a leader, add `arr[i]` to the `leaders` list.
+    - Update `max_from_right = arr[i]` to reflect the new maximum.
+6. Since we traversed from the right, the `leaders` list is in reverse order of their appearance in the original array. Reverse it before returning.
 
 #### Python Code Snippet
 ```python
@@ -391,15 +432,19 @@ def find_leaders(arr):
     return []
 
   leaders = []
+  # The rightmost element is always a leader
   max_from_right = arr[n-1]
   leaders.append(max_from_right)
 
+  # Traverse from right to left
   for i in range(n - 2, -1, -1):
-    if arr[i] >= max_from_right: # Note: problem says "greater than or equal to"
+    # If current element is greater than or equal to the max found so far from the right
+    if arr[i] >= max_from_right:
       max_from_right = arr[i]
       leaders.append(max_from_right)
 
-  return leaders[::-1] # Reverse to get original order
+  # The leaders were added in reverse order, so we reverse the list
+  return leaders[::-1]
 ```
 
 #### Tricks/Gotchas
