@@ -15,16 +15,23 @@ Given the root of a Binary Search Tree and a value to insert, insert the value i
 - **Output:** `[4,2,7,1,3,5]`
 
 #### Implementation Overview
-The process of insertion involves finding the correct empty spot for the new value while respecting the BST properties.
-1.  **Handle Empty Tree:** If the `root` is `null`, the new node becomes the root of the tree.
-2.  **Find Insertion Point:** Start a traversal from the `root`.
-3.  At each `current` node, compare the `val` to be inserted with `current.val`.
-    -   If `val < current.val`, the new node belongs in the left subtree. Move to the left child.
-    -   If `val > current.val`, the new node belongs in the right subtree. Move to the right child.
-4.  Continue this traversal until you find a `null` link. This is where the new node should be attached.
-5.  If you moved left from a `parent` node and `parent.left` is `null`, attach the new node as `parent.left`. Otherwise, if you moved right and `parent.right` is `null`, attach it as `parent.right`.
+We traverse the tree to find the correct empty spot for the new node. This can be done recursively or iteratively.
 
-#### Python Code Snippet (Recursive)
+**Iterative Approach:**
+1.  Handle the empty tree case: if the `root` is `null`, the new node becomes the root.
+2.  Start a traversal from the `root` with a `current` pointer.
+3.  Loop until a `null` link is found. At each step, compare `val` with `current.val`:
+    -   If `val < current.val`, move left. If `current.left` is `null`, this is the insertion point.
+    -   If `val > current.val`, move right. If `current.right` is `null`, this is the insertion point.
+
+**Recursive Approach:**
+1.  The function returns the node that should be placed at a certain position.
+2.  If the current `root` is `null`, we've found the insertion point. Return a new `TreeNode(val)`.
+3.  If `val < root.val`, recursively call on the left subtree: `root.left = insert_into_bst(root.left, val)`.
+4.  If `val > root.val`, recursively call on the right subtree: `root.right = insert_into_bst(root.right, val)`.
+5.  Return the (possibly modified) `root`.
+
+#### Python Code Snippet (Iterative)
 ```python
 class TreeNode:
     def __init__(self, val=0, left=None, right=None):
@@ -32,24 +39,25 @@ class TreeNode:
         self.left = left
         self.right = right
 
-def insert_into_bst(root: TreeNode, val: int) -> TreeNode:
+def insert_into_bst_iterative(root: TreeNode, val: int) -> TreeNode:
     if not root:
         return TreeNode(val)
 
-    if val < root.val:
-        root.left = insert_into_bst(root.left, val)
-    else: # val > root.val
-        root.right = insert_into_bst(root.right, val)
+    current = root
+    while True:
+        if val < current.val:
+            if not current.left:
+                current.left = TreeNode(val)
+                break
+            current = current.left
+        else: # val > current.val (assuming no duplicates)
+            if not current.right:
+                current.right = TreeNode(val)
+                break
+            current = current.right
 
     return root
 ```
-
-#### Tricks/Gotchas
-- **Return Value:** The recursive solution elegantly handles attaching the new node by returning it to be assigned to the parent's `left` or `right` pointer.
-- **In-place:** The operation modifies the existing tree structure.
-
-#### Related Problems
-- 7. Delete a Node in Binary Search Tree
 
 ---
 
@@ -60,15 +68,15 @@ def insert_into_bst(root: TreeNode, val: int) -> TreeNode:
 Given a root node of a BST and a key, delete the node with the given key in the BST. Return the root of the BST.
 
 #### Implementation Overview
-Deletion is the most complex modification operation. It involves finding the node and then handling three cases based on its children.
-1.  **Find the Node:** First, search for the node with the given `key`. If not found, do nothing.
-2.  **Handle Deletion Cases:**
-    -   **Case 1: The node is a leaf (no children).** This is the simplest case. Simply remove the node by setting its parent's corresponding child pointer to `null`.
-    -   **Case 2: The node has one child.** Replace the node with its single child. In the parent node, link the parent directly to the grandchild.
-    -   **Case 3: The node has two children.** This is the tricky case. To maintain the BST property, we must replace the node's value with either its **in-order successor** (the smallest value in its right subtree) or its **in-order predecessor** (the largest value in its left subtree).
+Deletion is the most complex foundational operation. It involves finding the node and then handling three cases based on its children.
+1.  **Find the Node:** First, search for the node with the given `key` using a recursive approach.
+2.  **Handle Deletion Cases:** Once the node is found (`key == root.val`):
+    -   **Case 1: The node is a leaf (no children).** This is the simplest case. Simply return `None` to the parent call, which effectively removes the node.
+    -   **Case 2: The node has one child.** Replace the node with its single child by returning the existing child to the parent call.
+    -   **Case 3: The node has two children.** This is the tricky case. To maintain the BST property, we must replace the node's value with either its **in-order successor** (the smallest value in its right subtree) or its **in-order predecessor**.
         a. Let's use the in-order successor. Find the minimum value in the node's right subtree.
         b. Copy this successor's value into the node we want to delete.
-        c. Now, the tree has a duplicate value. Recursively call the delete function to remove the successor node from the right subtree. This recursive deletion is guaranteed to fall into Case 1 or Case 2, which are simpler to handle.
+        c. Now, the tree has a duplicate value. Recursively call the delete function on the right subtree to remove the successor node. This recursive deletion is guaranteed to fall into Case 1 or Case 2.
 
 #### Python Code Snippet
 ```python
@@ -96,7 +104,7 @@ def delete_node(root: TreeNode, key: int) -> TreeNode:
         # Case 3: Node with two children
         # Find the in-order successor (smallest in the right subtree)
         successor = find_min_val_node(root.right)
-        # Copy the successor's content to this node
+        # Copy the successor's value to this node
         root.val = successor.val
         # Delete the in-order successor from the right subtree
         root.right = delete_node(root.right, successor.val)
@@ -104,16 +112,9 @@ def delete_node(root: TreeNode, key: int) -> TreeNode:
     return root
 ```
 
-#### Tricks/Gotchas
-- **Recursive Deletion:** The elegance of the solution for Case 3 lies in reducing the problem to a simpler case by recursively deleting the successor.
-
-#### Related Problems
-- 3. Find Min/Max in BST
-- 6. Insert a given Node in Binary Search Tree
-
 ---
 
-### 11. Construct a BST from a preorder traversal
+### 11. Construct a BST from a Preorder Traversal
 `[MEDIUM]` `#bst` `#construction` `#preorder`
 
 #### Problem Statement
@@ -124,18 +125,17 @@ Given an array of integers `preorder`, which represents the preorder traversal o
 - **Output:** The root of the BST: `[8,5,10,1,7,null,12]`
 
 #### Implementation Overview
-The first element in a preorder traversal is always the root of the tree/subtree. The subsequent elements are then split into the left subtree (all values smaller than the root) and the right subtree (all values larger than the root).
-A naive O(N^2) solution involves inserting each element into a BST one by one. The optimal O(N) solution uses bounds to place each node correctly.
+The first element in a preorder traversal is always the root of the tree/subtree. The subsequent elements are then split into the left subtree (all values smaller than the root) and the right subtree (all values larger than the root). A naive O(N^2) solution involves finding these splits for each node. The optimal O(N) solution uses bounds to place each node correctly.
 
-1.  We use a global index `i` to keep track of the current element in the `preorder` array.
+1.  We use a global index `i` to keep track of our position in the `preorder` array.
 2.  We define a recursive helper function `build(lower_bound, upper_bound)`.
-3.  The `root` of the current `build` call is `preorder[i]`. We must check if this value is within the `(lower_bound, upper_bound)` range. If not, we can't place it here, so we return `null`.
+3.  The `root` of the current `build` call is `preorder[i]`. We must check if this value is within the `(lower_bound, upper_bound)` range for the current position in the tree. If not, we can't place it here, so we return `null`.
 4.  If the value is valid, create a new `TreeNode`. Increment the global index `i`.
 5.  Recursively build the left subtree. The new bounds for the left child are `(lower_bound, node.val)`.
 6.  Recursively build the right subtree. The new bounds for the right child are `(node.val, upper_bound)`.
 7.  The initial call is `build(float('-inf'), float('inf'))`.
 
-#### Python Code Snippet
+#### Python Code Snippet (Optimal O(N))
 ```python
 class Solution:
     def bstFromPreorder(self, preorder: list[int]) -> TreeNode:
@@ -146,7 +146,7 @@ class Solution:
                 return None
 
             val = preorder[self.i]
-            # Check if the current value is within the valid range for this position
+            # Check if the current value is valid for this position
             if not (lower_bound < val < upper_bound):
                 return None
 
@@ -162,11 +162,8 @@ class Solution:
             return node
 
         return build(float('-inf'), float('inf'))
-
 ```
 
 #### Tricks/Gotchas
 - **State Management:** The key to the O(N) solution is managing the state efficiently. Using a global index for the `preorder` array and passing `min/max` bounds recursively avoids re-scanning the array.
-
-#### Related Problems
-- 9. Check if a tree is a BST or BT
+- **Alternative Solution:** A simpler to write, but less optimal, O(N log N) solution is to just iterate through the `preorder` array and insert each element into a BST using the standard insertion algorithm. This is a good fallback if the optimal solution is difficult to remember.

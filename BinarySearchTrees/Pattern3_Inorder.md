@@ -15,19 +15,23 @@ Given the root of a BST and an integer `k`, find the `k`-th smallest element in 
 - **Output:** `1`
 
 #### Implementation Overview
-The most straightforward solution uses an in-order traversal. Since the traversal visits nodes in sorted order, the `k`-th node visited will be the `k`-th smallest element.
+Since an in-order traversal visits nodes in sorted order, the `k`-th node visited will be the `k`-th smallest element.
 
-1.  **In-order Traversal:** Perform a recursive or iterative in-order traversal.
-2.  **Maintain a Counter:** Use a counter variable, initialized to `k`.
-3.  In the traversal, after visiting the left subtree but before visiting the root, decrement the counter.
-4.  If the counter becomes `0`, the current node is the `k`-th smallest element. Store this node's value and stop the traversal.
-5.  If the counter is not yet `0`, proceed to visit the right subtree.
+**Method 1: Recursive In-order Traversal**
+1.  Use a counter variable, initialized to `k`.
+2.  In the traversal, after visiting the left subtree but before visiting the root, decrement the counter.
+3.  If the counter becomes `0`, the current node is the `k`-th smallest. Store this value.
 
-To find the **k-th largest** element, you can either:
-a.  Find the `(N-k+1)`-th smallest element, where `N` is the total number of nodes.
-b.  Perform a reverse in-order traversal (Right, Root, Left) and find the `k`-th element.
+**Method 2: Iterative In-order Traversal with a Stack**
+This is often preferred to avoid deep recursion.
+1. Use a stack to simulate the in-order traversal.
+2. Go left as far as possible, pushing nodes onto the stack.
+3. Once you can't go left anymore, pop a node. This is the next node in the in-order sequence. Decrement `k`. If `k` is now 0, this is your answer.
+4. Move to the right child of the popped node and repeat the process.
 
-#### Python Code Snippet (K-th Smallest)
+To find the **k-th largest** element, you can find the `(N-k+1)`-th smallest element or perform a reverse in-order traversal (Right, Root, Left).
+
+#### Python Code Snippet (Iterative)
 ```python
 class TreeNode:
     def __init__(self, val=0, left=None, right=None):
@@ -35,36 +39,25 @@ class TreeNode:
         self.left = left
         self.right = right
 
-class Solution:
-    def kthSmallest(self, root: TreeNode, k: int) -> int:
-        self.k = k
-        self.result = -1
-        self.inorder_traverse(root)
-        return self.result
+def kth_smallest(root: TreeNode, k: int) -> int:
+    stack = []
+    current = root
 
-    def inorder_traverse(self, node: TreeNode):
-        if not node or self.k == 0:
-            return
+    while current or stack:
+        # Go left as far as possible
+        while current:
+            stack.append(current)
+            current = current.left
 
-        # Traverse left
-        self.inorder_traverse(node.left)
+        # Process the node
+        current = stack.pop()
+        k -= 1
+        if k == 0:
+            return current.val
 
-        # Process root
-        if self.k > 0:
-            self.k -= 1
-            if self.k == 0:
-                self.result = node.val
-                return
-
-        # Traverse right
-        self.inorder_traverse(node.right)
+        # Go right
+        current = current.right
 ```
-
-#### Tricks/Gotchas
-- **Early Exit:** The traversal can be stopped as soon as the `k`-th element is found to save computation.
-
-#### Related Problems
-- 12. Inorder Successor/Predecessor in BST
 
 ---
 
@@ -75,46 +68,44 @@ class Solution:
 Given the root of a binary tree, determine if it is a valid Binary Search Tree (BST).
 
 #### Implementation Overview
-There are two common methods to validate a BST.
+**Method 1: Recursive with Valid Range (Min/Max)**
+A robust method is a recursive approach that validates each node against a `(lower_bound, upper_bound)` range.
+1.  The initial call is `is_valid(root, -infinity, +infinity)`.
+2.  For a `node` to be valid, its value must be strictly between its `lower_bound` and `upper_bound`.
+3.  When recurring left, the valid range becomes `(lower_bound, node.val)`.
+4.  When recurring right, the valid range becomes `(node.val, upper_bound)`.
 
-**1. In-order Traversal and Check Sortedness:**
-The simplest concept is to perform an in-order traversal and collect all the node values into a list. After the traversal is complete, check if the list is strictly sorted. While easy to understand, this requires O(N) extra space for the list. A space-optimized version of this approach keeps track of only the `previous` node visited during the in-order traversal and checks if `current.val > previous.val` at each step.
+**Method 2: In-order Traversal**
+Since an in-order traversal of a valid BST yields a sorted sequence, we can check this property.
+1. Perform an in-order traversal.
+2. Keep track of the value of the previously visited node.
+3. At each current node, check if its value is strictly greater than the previous node's value. If not, the tree is not a valid BST.
 
-**2. Recursive with Valid Range (Min/Max):**
-A more robust and often preferred method is a recursive approach that validates each node against a `(min_val, max_val)` range.
-1.  Define a recursive helper function `is_valid(node, lower_bound, upper_bound)`.
-2.  The initial call will be `is_valid(root, -infinity, +infinity)`.
-3.  For a `node` to be valid, its value must be strictly between `lower_bound` and `upper_bound`.
-4.  When recurring on the `node.left`, the valid range for the left child becomes `(lower_bound, node.val)`. The upper bound is now the parent's value.
-5.  When recurring on the `node.right`, the valid range for the right child becomes `(node.val, upper_bound)`. The lower bound is now the parent's value.
-6.  If any node violates its range, the tree is not a valid BST.
-
-#### Python Code Snippet (Min/Max Range)
+#### Python Code Snippet (In-order Traversal)
 ```python
-def is_valid_bst(root: TreeNode) -> bool:
+class Solution:
+    def isValidBST(self, root: TreeNode) -> bool:
+        # Use a class member to store the previous value
+        self.prev_val = float('-inf')
 
-    def validate(node, low=float('-inf'), high=float('inf')):
-        if not node:
-            return True # An empty tree is a valid BST
+        def inorder(node):
+            if not node:
+                return True
 
-        # The current node's value must be within the bounds
-        if not (low < node.val < high):
-            return False
+            # Check left subtree
+            if not inorder(node.left):
+                return False
 
-        # The left subtree's upper bound is node.val
-        # The right subtree's lower bound is node.val
-        return (validate(node.left, low, node.val) and
-                validate(node.right, node.val, high))
+            # Check current node against previous
+            if node.val <= self.prev_val:
+                return False
+            self.prev_val = node.val
 
-    return validate(root)
+            # Check right subtree
+            return inorder(node.right)
+
+        return inorder(root)
 ```
-
-#### Tricks/Gotchas
-- **Strict Inequality:** The definition of a BST usually requires strict inequalities (`<` and `>`), not `<=` or `>=`. Be clear on this constraint.
-
-#### Related Problems
-- 11. Construct a BST from a preorder traversal
-- 15. Recover BST | Correct BST with two nodes swapped
 
 ---
 
@@ -126,17 +117,9 @@ Given a node `p` in a BST, find its in-order successor. The successor is the nod
 
 #### Implementation Overview
 The solution depends on whether the given node `p` has a right subtree.
-
 1.  **If `p` has a right subtree:** The in-order successor is the node with the minimum value in that right subtree. To find this, we simply traverse as far left as possible from `p.right`.
 2.  **If `p` has no right subtree:** The successor is an ancestor. We must find the lowest ancestor of `p` for which `p` is in its left subtree. We can find this by traversing down from the `root` of the entire tree.
-    -   Start at the `root`.
-    -   Initialize a `successor` candidate to `null`.
-    -   While traversing towards `p`:
-        -   If `p.val < current.val`, the `current` node is a potential successor. Store it (`successor = current`) and move left.
-        -   If `p.val > current.val`, the `current` node cannot be the successor. Move right.
-    -   The last `successor` candidate recorded is the answer.
-
-The logic for the **in-order predecessor** is symmetric.
+    -   While traversing towards `p`: if we move left (`p.val < current.val`), the `current` node is a potential successor. If we move right, it is not.
 
 #### Python Code Snippet (Successor)
 ```python
@@ -159,20 +142,13 @@ def inorder_successor(root: TreeNode, p: TreeNode) -> TreeNode:
             current = current.right
         else: # We found p
             break
-
     return successor
 ```
-
-#### Tricks/Gotchas
-- **Two Distinct Cases:** The logic is completely different depending on the existence of a right subtree. Both must be handled.
-
-#### Related Problems
-- 8. Find K-th smallest/largest element in BST
 
 ---
 
 ### 14. Two Sum In BST
-`[MEDIUM]` `#bst` `#inorder-traversal` `#two-pointers`
+`[EASY]` `#bst` `#inorder-traversal` `#two-pointers` `#hash-set`
 
 #### Problem Statement
 Given the root of a BST and a target number `k`, return `true` if there exist two elements in the BST such that their sum is equal to `k`, or `false` otherwise.
@@ -181,52 +157,43 @@ Given the root of a BST and a target number `k`, return `true` if there exist tw
 **Approach 1: In-order Traversal + Two Pointers (O(N) time, O(N) space)**
 1.  Perform an in-order traversal of the BST to get a sorted list of its node values.
 2.  Use the standard two-pointer technique on this sorted list to find if a pair sums to `k`.
-    -   Initialize `left = 0` and `right = len(list) - 1`.
-    -   If `sum > k`, decrement `right`. If `sum < k`, increment `left`. If `sum == k`, return `true`.
 
-**Approach 2: Using a BST Iterator (O(N) time, O(H) space)**
-This approach avoids storing the entire tree in a list.
-1.  Implement a `BSTIterator` class that supports `next()` (for forward in-order traversal) and `prev()` (for reverse in-order traversal). This is typically done using a stack.
-2.  Create two iterators, one for `next` and one for `prev`.
-3.  Use these iterators to simulate the two-pointer approach directly on the tree structure.
+**Approach 2: Hashing (O(N) time, O(N) space)**
+1.  Traverse the tree (any order works).
+2.  For each node with value `v`, check if `k - v` exists in a hash set.
+3.  If it exists, return `true`.
+4.  If not, add `v` to the hash set.
 
-#### Python Code Snippet (Approach 1)
+#### Python Code Snippet (Hashing)
 ```python
-def find_target(root: TreeNode, k: int) -> bool:
+def find_target_bst(root: TreeNode, k: int) -> bool:
+    if not root:
+        return False
 
-    def inorder(node):
-        if not node:
-            return []
-        return inorder(node.left) + [node.val] + inorder(node.right)
+    seen = set()
+    stack = [root]
 
-    sorted_list = inorder(root)
-
-    left, right = 0, len(sorted_list) - 1
-    while left < right:
-        current_sum = sorted_list[left] + sorted_list[right]
-        if current_sum == k:
+    while stack:
+        node = stack.pop()
+        if k - node.val in seen:
             return True
-        elif current_sum < k:
-            left += 1
-        else:
-            right -= 1
+        seen.add(node.val)
+
+        if node.left:
+            stack.append(node.left)
+        if node.right:
+            stack.append(node.right)
 
     return False
 ```
 
-#### Tricks/Gotchas
-- **Space-Time Tradeoff:** The first approach is simple but uses O(N) space. The second is more complex to implement but optimal in space (O(H)).
-
-#### Related Problems
-- (Arrays) 15. 2Sum Problem
-
 ---
 
 ### 15. Recover BST | Correct BST with two nodes swapped
-`[HARD]` `#bst` `#inorder-traversal` `#modification`
+`[MEDIUM]` `#bst` `#inorder-traversal` `#modification`
 
 #### Problem Statement
-You are given the `root` of a BST where exactly two nodes have been swapped by mistake. Recover the tree without changing its structure.
+You are given the `root` of a BST where the values of exactly two nodes have been swapped by mistake. Recover the tree without changing its structure.
 
 *Example:*
 - **Input:** `root = [3,1,4,null,null,2]` (3 and 2 are swapped)
@@ -237,10 +204,10 @@ The core insight is that an in-order traversal of the corrupted BST will reveal 
 1.  Initialize three pointers: `first = None`, `middle = None`, `last = None`, and `prev = TreeNode(float('-inf'))`.
 2.  Perform an in-order traversal. At each node, compare `current.val` with `prev.val`.
 3.  If `prev.val > current.val`, we've found a "dip" or violation.
-    -   If this is the **first violation** we've found (`first` is `None`), it means `prev` is the first out-of-place node. So, `first = prev`. `middle` is set to the `current` node, as it might be the second swapped node (in case the swapped nodes are adjacent).
+    -   If this is the **first violation** (`first` is `None`), it means `prev` is the first out-of-place node. So, `first = prev`. `middle` is set to the `current` node, as it might be the second swapped node (in case the swapped nodes are adjacent).
     -   If this is the **second violation** (`first` is not `None`), it means the `current` node is the second out-of-place node. So, `last = current`.
-4.  After the traversal, if `last` is not `None`, it means the swapped nodes were `first` and `last`. Swap their values.
-5.  If `last` is `None`, it means the swapped nodes were adjacent in the in-order sequence. The nodes to swap are `first` and `middle`. Swap their values.
+4.  After the traversal, if `last` is not `None`, it means the swapped nodes were non-adjacent. Swap `first` and `last`.
+5.  If `last` is `None`, it means the swapped nodes were adjacent. Swap `first` and `middle`.
 
 #### Python Code Snippet
 ```python
@@ -252,21 +219,15 @@ class Solution:
         self.prev = TreeNode(float('-inf'))
 
         def inorder(node):
-            if not node:
-                return
-
+            if not node: return
             inorder(node.left)
 
-            # Check for violation
             if self.prev.val > node.val:
                 if not self.first:
-                    # First violation
                     self.first = self.prev
                     self.middle = node
                 else:
-                    # Second violation
                     self.last = node
-
             self.prev = node
 
             inorder(node.right)
@@ -274,15 +235,7 @@ class Solution:
         inorder(root)
 
         if self.last:
-            # Non-adjacent swap
             self.first.val, self.last.val = self.last.val, self.first.val
         else:
-            # Adjacent swap
             self.first.val, self.middle.val = self.middle.val, self.first.val
 ```
-
-#### Tricks/Gotchas
-- **Identifying Nodes:** Correctly identifying which nodes to swap based on one or two violations is the main challenge.
-
-#### Related Problems
-- 9. Check if a tree is a BST or BT

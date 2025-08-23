@@ -10,11 +10,11 @@ This file tracks the progress of refactoring the documentation files.
 - [x] BinarySearch/Pattern1_Foundational.md
 - [x] BinarySearch/Pattern2_UnconventionallySorted.md
 - [x] BinarySearch/Pattern3_BS_on_Answers.md
-- [ ] BinarySearch/Pattern4_BS_on_2D_Matrices.md
-- [ ] BinarySearch/Pattern5_Advanced.md
-- [ ] BinarySearchTrees/Pattern1_Foundational.md
-- [ ] BinarySearchTrees/Pattern2_Modification.md
-- [ ] BinarySearchTrees/Pattern3_Inorder.md
+- [x] BinarySearch/Pattern4_BS_on_2D_Matrices.md
+- [x] BinarySearch/Pattern5_Advanced.md
+- [x] BinarySearchTrees/Pattern1_Foundational.md
+- [x] BinarySearchTrees/Pattern2_Modification.md
+- [x] BinarySearchTrees/Pattern3_Inorder.md
 - [ ] BinarySearchTrees/Pattern4_Advanced.md
 - [ ] BinaryTrees/Pattern1_Foundational_Traversals.md
 - [ ] BinaryTrees/Pattern2_Tree_Views.md
@@ -53,12 +53,12 @@ This file tracks the progress of refactoring the documentation files.
 - [ ] SlidingWindowTwoPointer/Pattern1_VariableWindow_FindLength.md
 - [ ] SlidingWindowTwoPointer/Pattern2_VariableWindow_CountSubarrays.md
 - [ ] SlidingWindowTwoPointer/Pattern3_TwoPointers_NonWindow.md
-- [ ] StackAndQueue/Pattern1_Basic_Implementation.md
-- [ ] StackAndQueue/Pattern2_Implementation_with_Other_DS.md
-- [ ] StackAndQueue/Pattern3_Classic_Stack_Applications.md
-- [ ] StackAndQueue/Pattern4_Monotonic_Stack.md
-- [ ] StackAndQueue/Pattern5_Monotonic_Queue.md
-- [ ] StackAndQueue/Pattern6_Advanced_DS_Design.md
+- [x] StackAndQueue/Pattern1_Basic_Implementation.md
+- [x] StackAndQueue/Pattern2_Implementation_with_Other_DS.md
+- [x] StackAndQueue/Pattern3_Classic_Stack_Applications.md
+- [x] StackAndQueue/Pattern4_Monotonic_Stack.md
+- [x] StackAndQueue/Pattern5_Monotonic_Queue.md
+- [x] StackAndQueue/Pattern6_Advanced_DS_Design.md
 - [ ] Strings/Pattern1_Basic_String_Manipulations.md
 - [ ] Strings/Pattern2_Substring_and_Palindrome_Problems.md
 - [ ] Strings/Pattern3_Character_Frequency_and_Mappings.md
