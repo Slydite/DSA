@@ -15,18 +15,18 @@ This file tracks the progress of refactoring the documentation files.
 - [x] BinarySearchTrees/Pattern1_Foundational.md
 - [x] BinarySearchTrees/Pattern2_Modification.md
 - [x] BinarySearchTrees/Pattern3_Inorder.md
-- [ ] BinarySearchTrees/Pattern4_Advanced.md
-- [ ] BinaryTrees/Pattern1_Foundational_Traversals.md
-- [ ] BinaryTrees/Pattern2_Tree_Views.md
-- [ ] BinaryTrees/Pattern3_Recursive_Properties_Path_Sums.md
-- [ ] BinaryTrees/Pattern4_Pathfinding_Ancestors.md
-- [ ] BinaryTrees/Pattern5_Tree_Construction_Manipulation.md
-- [ ] BinaryTrees/Pattern6_Advanced_In-Place_Traversals.md
-- [ ] DP/Pattern1_1D_DP_Fundamentals.md
-- [ ] DP/Pattern2_Grid_Pathfinding.md
-- [ ] DP/Pattern3_Grid_Complex_State.md
-- [ ] DP-2/Pattern1_Subset_Sum.md
-- [ ] DP-2/Pattern2_Unbounded_Knapsack.md
+- [x] BinarySearchTrees/Pattern4_Advanced.md
+- [x] BinaryTrees/Pattern1_Foundational_Traversals.md
+- [x] BinaryTrees/Pattern2_Tree_Views.md
+- [x] BinaryTrees/Pattern3_Recursive_Properties_Path_Sums.md
+- [x] BinaryTrees/Pattern4_Pathfinding_Ancestors.md
+- [x] BinaryTrees/Pattern5_Tree_Construction_Manipulation.md
+- [x] BinaryTrees/Pattern6_Advanced_In-Place_Traversals.md
+- [x] DP/Pattern1_1D_DP_Fundamentals.md
+- [x] DP/Pattern2_Grid_Pathfinding.md
+- [x] DP/Pattern3_Grid_Complex_State.md
+- [x] DP-2/Pattern1_Subset_Sum.md
+- [x] DP-2/Pattern2_Unbounded_Knapsack.md
 - [ ] DP-2/Pattern3_LCS_Variations.md
 - [ ] DP-2/Pattern4_Advanced_String_DP.md
 - [ ] DP-2/Pattern5_DP_on_Stocks.md
