@@ -1,282 +1,250 @@
-This pattern, often called the "pick/don't-pick" method, is a fundamental backtracking strategy used to generate all possible subsets, subsequences, or combinations of a given set of elements. The core idea is to recursively explore two choices for each element: either include it in the current solution or exclude it.
+### `[PATTERN] Recursion with Backtracking`
+
+**Backtracking** is an algorithmic technique for solving problems recursively by trying to build a solution incrementally, one piece at a time. It removes those solutions that fail to satisfy the constraints of the problem at any point in time.
+
+Think of it like navigating a maze. You explore one path. If you hit a dead end, you "backtrack" to the last junction and try a different path.
+
+#### The Backtracking Template
+Most backtracking problems can be solved using a common template:
+
+```python
+def backtrack(current_state, other_params):
+    # Base Case: If the current state is a valid solution, add it to results.
+    if is_a_solution(current_state):
+        add_to_solutions(current_state)
+        return
+
+    # Iterate through all possible choices from the current state.
+    for choice in all_possible_choices():
+        # 1. Make a choice
+        # Apply the choice to the current state.
+        make_choice(choice)
+
+        # 2. Recurse
+        # Call the function with the updated state.
+        backtrack(updated_state, other_params)
+
+        # 3. Backtrack (Undo the choice)
+        # Revert the state to what it was before making the choice.
+        # This is the crucial step that allows exploring other paths.
+        undo_choice(choice)
+```
+
+This pattern is powerful for solving problems related to permutations, combinations, subsets, and pathfinding.
 
 ---
-### 1. Generate all binary strings
-`[MEDIUM]` `#recursion` `#backtracking`
+
+### 1. Subsets (Power Set)
+`[MEDIUM]` `#backtracking` `#subsets`
 
 #### Problem Statement
-Given a positive integer `N`, generate all possible binary strings of length `N`. A binary string is a sequence of '0's and '1's.
-
-**Example 1:**
-- **Input:** N = 3
-- **Output:** ["000", "001", "010", "011", "100", "101", "110", "111"]
+Given an integer array `nums` of **unique** elements, return all possible subsets (the power set). The solution set must not contain duplicate subsets.
 
 #### Implementation Overview
-This is a classic introductory problem for recursion. For each position in the string (from 0 to N-1), we have two independent choices: place a '0' or a '1'.
+This is the canonical "pick / don't pick" backtracking problem. For each element in `nums`, we have two choices: either include it in our current subset or not include it.
 
-1.  **Recursive Function Signature:** The function typically takes the current index `i` and the string (or character array) being built.
-2.  **Base Case:** When the index `i` reaches `N`, it means we have filled all positions. The current string is a complete binary string, so we add it to our list of results and return.
-3.  **Recursive Step:** At index `i`:
-    -   **Choice 1:** Place '0' at the current position and make a recursive call for the next position, `i + 1`.
-    -   **Choice 2:** Place '1' at the current position and make a recursive call for the next position, `i + 1`.
-
-This naturally explores all 2^N possibilities.
-
-#### Tricks/Gotchas
-- **Immutability:** If using strings, remember they are immutable in many languages. You might need to pass new strings in recursive calls (`current_string + '0'`) or use a mutable data structure like a character array or list for better performance.
-
----
-### 2. Print all subsequences/Power Set
-`[MEDIUM]` `#recursion` `#backtracking` `#subsequences` `#power-set`
-
-#### Problem Statement
-Given a string or an array of integers, generate all of its subsequences. A subsequence is a sequence that can be derived from the original by deleting some (or none) of the elements without changing the order of the remaining elements. The set of all subsequences is also known as the power set.
-
-**Example 1:**
-- **Input:** `[1, 2, 3]`
-- **Output:** `[[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]]`
-
-#### Implementation Overview
-This is the canonical "pick/don't-pick" problem. For each element in the input array, we decide whether to include it in the current subsequence or not.
-
-1.  **Recursive Function Signature:** `solve(index, current_subsequence)`
-2.  **Base Case:** When `index` equals the length of the input array, we have considered all elements. The `current_subsequence` is a valid subsequence, so we add a copy of it to our results.
-3.  **Recursive Step:** At `index`:
-    -   **Pick:** Add `array[index]` to `current_subsequence`. Recursively call `solve(index + 1, current_subsequence)`.
-    -   **Backtrack:** After the "pick" call returns, remove `array[index]` from `current_subsequence` to revert the state for the next choice.
-    -   **Don't-Pick:** Recursively call `solve(index + 1, current_subsequence)` without adding the element.
+- **Choice**: For each element, do we add it to the current subset?
+- **State**: The current subset being built and the current index in `nums` we are considering.
+- **Goal**: We have considered every element. Every state we reach is a valid subset.
 
 #### Python Code Snippet
 ```python
-def get_subsequences(arr):
+def subsets(nums: list[int]) -> list[list[int]]:
     result = []
-    current_subsequence = []
+    current_subset = []
 
-    def solve(index):
-        if index == len(arr):
-            result.append(list(current_subsequence))
-            return
+    def backtrack(index):
+        # Base Case: Add the current subset configuration to the result.
+        # This is a valid subset at every step.
+        result.append(list(current_subset))
 
-        # Pick the element
-        current_subsequence.append(arr[index])
-        solve(index + 1)
+        # Explore choices for the remaining elements.
+        for i in range(index, len(nums)):
+            # 1. Make a choice: Include nums[i]
+            current_subset.append(nums[i])
 
-        # Don't-pick the element (and backtrack)
-        current_subsequence.pop()
-        solve(index + 1)
+            # 2. Recurse: Explore further with this choice
+            backtrack(i + 1)
 
-    solve(0)
+            # 3. Backtrack: Undo the choice (remove nums[i])
+            current_subset.pop()
+
+    backtrack(0)
     return result
 ```
 
-#### Tricks/Gotchas
-- **Backtracking:** The `pop()` operation after the first recursive call is the most crucial part. It ensures that the state is clean for the "don't-pick" path.
-- **Copying the Result:** When adding `current_subsequence` to the final result list, you must add a *copy*. Otherwise, you'd be adding a reference to the list that will be modified later, leading to incorrect output.
-
 ---
-### 3. Count all subsequences with sum K
-`[HARD]` `#recursion` `#backtracking` `#subsequences` `#dynamic-programming`
+
+### 2. Subsets II (Contains Duplicates)
+`[MEDIUM]` `#backtracking` `#subsets`
 
 #### Problem Statement
-Given an array of integers `arr` and an integer `K`, count the total number of subsequences of `arr` that sum up to `K`.
-
-**Example 1:**
-- **Input:** `arr = [1, 2, 1]`, `K = 2`
-- **Output:** 2 (The subsequences are `{1, 1}` and `{2}`)
+Given an integer array `nums` that **may contain duplicates**, return all possible subsets (the power set). The solution set must not contain duplicate subsets.
 
 #### Implementation Overview
-This is a "pick/don't-pick" problem where we are not generating the subsequences themselves, but counting them based on a condition. The recursive function returns the count of valid subsequences found from its state.
+This is a variation of the Subsets problem. To avoid duplicate subsets, we must handle the duplicate numbers in the input.
+1.  **Sort the input array**: Sorting `nums` brings all duplicate elements together.
+2.  **Modify the loop**: In the backtracking function, when we iterate through our choices, we add a condition: if the current element is the same as the previous one, and we are not at the beginning of the choices for this level, we **skip** it. This ensures that for a group of identical elements, we only pick the first one to start a new path, preventing duplicate subsets.
 
-1.  **Recursive Function Signature:** `count_subsequences(index, current_sum)`
-2.  **Base Case:** When `index` reaches the end of the array:
-    - If `current_sum == K`, we have found one valid subsequence. Return 1.
-    - Otherwise, return 0.
-3.  **Recursive Step:** At `index`:
-    -   **Pick:** Call `count_subsequences(index + 1, current_sum + arr[index])`. This gives the count of valid subsequences including the current element.
-    -   **Don't-Pick:** Call `count_subsequences(index + 1, current_sum)`. This gives the count of valid subsequences *not* including the current element.
-    -   The total count for the current state is the sum of the results from the "pick" and "don't-pick" calls.
+#### Python Code Snippet
+```python
+def subsets_with_dup(nums: list[int]) -> list[list[int]]:
+    result = []
+    current_subset = []
+    nums.sort()  # Sort to handle duplicates
 
-#### Tricks/Gotchas
-- **Handling Zeros:** If the array contains zeros, multiple subsequences can have the same sum. The standard pick/don't-pick approach handles this correctly.
-- **Optimization:** For larger inputs, this recursive solution is very slow due to overlapping subproblems. It can be optimized with memoization (Dynamic Programming), where you store the results for `(index, current_sum)` pairs to avoid re-computation.
+    def backtrack(index):
+        result.append(list(current_subset))
 
----
-### 4. Check if there exists a subsequence with sum K
-`[MEDIUM]` `#recursion` `#backtracking` `#subsequences` `#dynamic-programming`
+        for i in range(index, len(nums)):
+            # **The crucial part to avoid duplicates**
+            # If the current element is the same as the previous one,
+            # and we are not considering it for the first time in this level, skip it.
+            if i > index and nums[i] == nums[i - 1]:
+                continue
 
-#### Problem Statement
-Given an array of non-negative integers `arr` and a target sum `K`, determine if there is a subsequence of `arr` with a sum equal to `K`.
+            current_subset.append(nums[i])
+            backtrack(i + 1)
+            current_subset.pop()
 
-**Example 1:**
-- **Input:** `arr = [2, 3, 7, 8, 10]`, `K = 11`
-- **Output:** `True` (The subsequence is `{3, 8}`)
-
-#### Implementation Overview
-This is a decision-based version of the previous problem. We don't need to count all possibilities, we just need to find one. The recursive function can return a boolean.
-
-1.  **Recursive Function Signature:** `check_sum(index, target)`
-2.  **Base Case:**
-    - If `target == 0`, we have successfully found a subsequence that sums to the original `K`. Return `True`.
-    - If `index` reaches the end of the array (and `target` is not 0), this path is a dead end. Return `False`.
-3.  **Recursive Step:** At `index`:
-    -   **Pick:** If `arr[index] <= target`, make a recursive call `check_sum(index + 1, target - arr[index])`. If this call returns `True`, we have found a solution, so we can immediately return `True`.
-    -   **Don't-Pick:** If the "pick" path didn't return `True`, we must explore the "don't-pick" path: `check_sum(index + 1, target)`.
-    -   The result is `pick_result OR dont_pick_result`.
-
-#### Related Problems
-- This is the classic **Subset Sum Problem**, which is a well-known NP-complete problem and a foundational dynamic programming problem.
+    backtrack(0)
+    return result
+```
 
 ---
-### 5. Combination Sum
-`[MEDIUM]` `#recursion` `#backtracking`
+
+### 3. Combination Sum
+`[MEDIUM]` `#backtracking` `#combinations`
 
 #### Problem Statement
 Given an array of **distinct** integers `candidates` and a target integer `target`, return a list of all **unique combinations** of `candidates` where the chosen numbers sum to `target`. You may return the combinations in any order. The **same number may be chosen from `candidates` an unlimited number of times**.
 
-**Example 1:**
-- **Input:** `candidates = [2, 3, 6, 7]`, `target = 7`
-- **Output:** `[[2, 2, 3], [7]]`
-
 #### Implementation Overview
-The key difference from a standard subsequence problem is that we can reuse elements. This changes the recursive step for the "pick" choice.
-
-1.  **Recursive Function Signature:** `find_combinations(index, target, current_combination)`
-2.  **Base Case:**
-    - If `target == 0`, we've found a valid combination. Add a copy of `current_combination` to the results and return.
-    - If `index` is out of bounds or `target < 0`, this path is invalid. Return.
-3.  **Recursive Step:** At `index`:
-    -   **Pick:** If `candidates[index] <= target`:
-        - Add `candidates[index]` to `current_combination`.
-        - Recursively call `find_combinations` on the **same index** (`index`, not `index + 1`) with the new target: `target - candidates[index]`. This allows the element to be reused.
-        - Backtrack by removing `candidates[index]` from `current_combination`.
-    -   **Don't-Pick:** To move to the next candidate, call `find_combinations(index + 1, target, current_combination)`.
-
-#### Tricks/Gotchas
-- **Reusing Elements:** The crucial trick is that the recursive call for the "pick" option stays at the *same index*, while the "don't-pick" option moves to the *next index*. This structure ensures all combinations are found without generating duplicate combinations like `[2, 3]` and `[3, 2]`.
-
----
-### 6. Combination Sum-II
-`[MEDIUM]` `#recursion` `#backtracking`
-
-#### Problem Statement
-Given a collection of candidate numbers `candidates` (which **may contain duplicates**) and a target integer `target`, find all unique combinations in `candidates` where the numbers sum to `target`. **Each number in `candidates` may only be used once in each combination.**
-
-**Example 1:**
-- **Input:** `candidates = [10, 1, 2, 7, 6, 1, 5]`, `target = 8`
-- **Output:** `[[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]`
-
-#### Implementation Overview
-This problem introduces two new constraints: numbers cannot be reused, and the input may have duplicates.
-
-1.  **Sort the Input:** First, sort the `candidates` array. This is essential for efficiently skipping duplicate combinations.
-2.  **Recursive Logic:** The core logic is now closer to a standard subsequence problem because each element can be used only once.
-3.  **Handling Duplicates:** The main challenge is to avoid duplicate combinations (e.g., using the first '1' and '7' vs. the second '1' and '7' in the example). The sorted array helps here. Inside our recursive function, we iterate through candidates to pick from. If we encounter a candidate that is the same as the one before it, and we are not at the beginning of the iteration for this level of recursion, we skip it.
-    - Loop from `i = index` to `len(candidates)`.
-    - Add the check: `if i > index and candidates[i] == candidates[i-1]: continue`. This ensures that we only generate combinations starting with the first occurrence of a repeated number.
-
-#### Tricks/Gotchas
-- **Sorting:** Sorting the input array is the first and most important step.
-- **Duplicate Skipping Logic:** The condition `if i > index and candidates[i] == candidates[i-1]: continue` is the key trick. It says: "If this number is the same as the previous one, and I'm not the first number being considered at this recursive level, then skip it, because the combination starting with this number will be a duplicate of one I've already generated."
-
----
-### 7. Subset Sum-I
-`[MEDIUM]` `#recursion` `#backtracking` `#subsequences`
-
-#### Problem Statement
-Given a list of `N` integers, find the sum of all the subsets in it.
-
-**Example 1:**
-- **Input:** `[2, 3]`
-- **Output:** `[0, 2, 3, 5]` (Sums of `[]`, `[2]`, `[3]`, `[2, 3]`)
-
-#### Implementation Overview
-This is a direct and simple application of the "pick/don't-pick" pattern, where we are interested in the final sum of each generated subset.
-
-1.  **Recursive Function Signature:** `find_sums(index, current_sum)`
-2.  **Base Case:** When `index` reaches the end of the array, `current_sum` represents the sum of one complete subset. Add this sum to the result list.
-3.  **Recursive Step:** At `index`:
-    -   **Pick:** Make a recursive call for the next index with an updated sum: `find_sums(index + 1, current_sum + arr[index])`.
-    -   **Don't-Pick:** Make a recursive call for the next index with the same sum: `find_sums(index + 1, current_sum)`.
-
-#### Tricks/Gotchas
-- The initial call should be `find_sums(0, 0)`.
-- The problem is straightforward, serving as a good exercise to solidify the basic pick/don't-pick pattern.
-
----
-### 8. Subset Sum-II
-`[MEDIUM]` `#recursion` `#backtracking` `#subsequences`
-
-#### Problem Statement
-Given an integer array `nums` that may contain **duplicates**, return all possible **unique** subsets (the power set). The solution set must not contain duplicate subsets.
-
-**Example 1:**
-- **Input:** `[1, 2, 2]`
-- **Output:** `[[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]`
-
-#### Implementation Overview
-This problem combines the "generate all subsequences" idea with the "handle duplicates" technique from Combination Sum-II.
-
-1.  **Sort the Input:** Sort the input array `nums` to handle duplicates gracefully.
-2.  **Recursive Logic:** The recursive function will build the subsets. A common way to structure the recursion here is to make a decision at each step about which element to add next.
-3.  **Handling Duplicates:**
-    - The recursive function is called once for each starting `index`.
-    - Inside the function, loop from the `index` to the end of the array.
-    - The key logic: `if i > index and nums[i] == nums[i-1]: continue`. This prevents creating duplicate subsets. For a block of identical elements like `[2, 2, 2]`, it ensures that a `2` is only added if the previous element considered at this level was also a `2`.
+This is a classic backtracking problem where we explore combinations that sum to a target.
+- **Choice**: At each step, we can either choose the current candidate again (if the sum doesn't exceed the target) or move to the next candidate.
+- **State**: The current combination, the current sum, and the index of the candidate we are considering.
+- **Goal**: The current sum equals the `target`.
 
 #### Python Code Snippet
 ```python
-def subsetsWithDup(nums):
+def combination_sum(candidates: list[int], target: int) -> list[list[int]]:
     result = []
-    current_subset = []
-    nums.sort()
 
-    def find_subsets(start_index):
-        result.append(list(current_subset))
+    def backtrack(start_index, current_combination, current_sum):
+        # Base Case: Successful solution
+        if current_sum == target:
+            result.append(list(current_combination))
+            return
 
-        for i in range(start_index, len(nums)):
-            # Skip duplicates
-            if i > start_index and nums[i] == nums[i-1]:
-                continue
+        # Base Case: Pruning - path is no longer viable
+        if current_sum > target:
+            return
 
-            current_subset.append(nums[i])
-            find_subsets(i + 1)
-            current_subset.pop()
+        # Explore choices
+        for i in range(start_index, len(candidates)):
+            candidate = candidates[i]
 
-    find_subsets(0)
+            # 1. Make a choice
+            current_combination.append(candidate)
+
+            # 2. Recurse
+            # We pass `i` instead of `i + 1` because we can reuse the same element.
+            backtrack(i, current_combination, current_sum + candidate)
+
+            # 3. Backtrack
+            current_combination.pop()
+
+    backtrack(0, [], 0)
     return result
 ```
 
 ---
-### 9. Combination Sum - III
-`[HARD]` `#recursion` `#backtracking`
+
+### 4. Combination Sum II (No Duplicate Combinations)
+`[MEDIUM]` `#backtracking` `#combinations`
 
 #### Problem Statement
-Find all valid combinations of `k` numbers that sum up to `n` such that the following conditions are true:
-- Only numbers from 1 to 9 are used.
-- Each number is used **at most once**.
-
-**Example 1:**
-- **Input:** k = 3, n = 7
-- **Output:** `[[1, 2, 4]]`
-
-**Example 2:**
-- **Input:** k = 3, n = 9
-- **Output:** `[[1, 2, 6], [1, 3, 5], [2, 3, 4]]`
+Given a collection of candidate numbers `candidates` (which **may contain duplicates**) and a target integer `target`, find all **unique combinations** in `candidates` where the candidate numbers sum to `target`. **Each number in `candidates` may only be used once** in the combination.
 
 #### Implementation Overview
-This is a highly constrained combination sum problem. We are given `k` (the required size of the combination) and `n` (the target sum). The candidate numbers are implicitly the set `{1, 2, ..., 9}`.
+This problem has two key differences from Combination Sum I:
+1.  Each candidate can be used only once.
+2.  The input array can have duplicates, but the result should not have duplicate combinations.
 
-1.  **Recursive Function Signature:** `find_combinations(start_num, k, n, current_combination)`
-2.  **Base Case:**
-    - If `len(current_combination) == k` and `n == 0`, we have found a valid combination. Add a copy to the results.
-    - Return if `n < 0` or `len(current_combination) == k`.
-3.  **Recursive Step:**
-    - Iterate through the candidate numbers. The loop should go from `start_num` to 9.
-    - For each number `i` in the loop:
-        - Add `i` to `current_combination`.
-        - Make a recursive call: `find_combinations(i + 1, k, n - i, current_combination)`. We use `i + 1` as the next starting number because each number can be used at most once.
-        - Backtrack by removing `i` from `current_combination`.
+This combination of constraints leads to a solution similar to Subsets II.
+1.  **Sort the input**: Sort `candidates` to group duplicates.
+2.  **Use each element once**: In the recursive call, pass `i + 1` as the next starting index, not `i`. This prevents reusing the same element.
+3.  **Skip duplicates**: Just like in Subsets II, in the choice-making loop, if `i > start_index` and `candidates[i] == candidates[i - 1]`, we `continue`. This prevents creating duplicate combinations like `[1, 7]` and `[1, 7]` when the input is `[1, 1, 7]`.
 
-#### Tricks/Gotchas
-- **Pruning:** The search can be pruned. For example, the loop for `i` doesn't need to go all the way to 9 if `i` is already greater than the remaining target `n`.
-- **State Management:** The recursive state must track not only the remaining sum but also the starting number to pick from and the number of elements still needed (`k`).
+#### Python Code Snippet
+```python
+def combination_sum2(candidates: list[int], target: int) -> list[list[int]]:
+    result = []
+    candidates.sort()
+
+    def backtrack(start_index, current_combination, current_sum):
+        if current_sum == target:
+            result.append(list(current_combination))
+            return
+
+        if current_sum > target:
+            return
+
+        for i in range(start_index, len(candidates)):
+            # Skip duplicates to avoid duplicate combinations
+            if i > start_index and candidates[i] == candidates[i - 1]:
+                continue
+
+            candidate = candidates[i]
+
+            # Pruning: if the current candidate is too large, the rest will be too.
+            if current_sum + candidate > target:
+                break
+
+            current_combination.append(candidate)
+            # Recurse with `i + 1` because each number can be used only once.
+            backtrack(i + 1, current_combination, current_sum + candidate)
+            current_combination.pop()
+
+    backtrack(0, [], 0)
+    return result
+```
+
+---
+
+### 5. Generate Parentheses
+`[MEDIUM]` `#backtracking` `#string-generation`
+
+#### Problem Statement
+Given `n` pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+
+#### Implementation Overview
+We build the string character by character, and at each step, we have two choices: add a '(' or add a ')'. However, we must follow constraints.
+- **State**: The current string being built, the number of open parentheses used (`open_count`), and the number of closed parentheses used (`close_count`).
+- **Choices & Constraints**:
+    1. We can add an open parenthesis `(` if `open_count < n`.
+    2. We can add a closed parenthesis `)` if `close_count < open_count`. This is the key constraint that ensures the parentheses are well-formed.
+- **Goal**: The length of the string is `2 * n`.
+
+#### Python Code Snippet
+```python
+def generate_parenthesis(n: int) -> list[str]:
+    result = []
+
+    def backtrack(current_string, open_count, close_count):
+        # Base Case: A valid solution is found
+        if len(current_string) == 2 * n:
+            result.append(current_string)
+            return
+
+        # Choice 1: Add an open parenthesis
+        if open_count < n:
+            backtrack(current_string + "(", open_count + 1, close_count)
+
+        # Choice 2: Add a closed parenthesis
+        if close_count < open_count:
+            backtrack(current_string + ")", open_count, close_count + 1)
+
+    backtrack("", 0, 0)
+    return result
+```

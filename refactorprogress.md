@@ -27,43 +27,43 @@ This file tracks the progress of refactoring the documentation files.
 - [x] DP/Pattern3_Grid_Complex_State.md
 - [x] DP-2/Pattern1_Subset_Sum.md
 - [x] DP-2/Pattern2_Unbounded_Knapsack.md
-- [ ] DP-2/Pattern3_LCS_Variations.md
-- [ ] DP-2/Pattern4_Advanced_String_DP.md
-- [ ] DP-2/Pattern5_DP_on_Stocks.md
-- [ ] DP-2/Pattern6_Greedy_Approach.md
-- [ ] DP-3/Pattern1_DP_on_LIS.md
-- [ ] DP-3/Pattern2_Partition_DP_MCM.md
-- [ ] DP-3/Pattern3_DP_on_Squares.md
-- [ ] Graphs/Pattern1_Graph_Foundations.md
-- [ ] Graphs/Pattern2_DFS_Applications.md
-- [ ] Graphs/Pattern3_BFS_Applications.md
-- [ ] Graphs/Pattern4_Topological_Sort.md
-- [ ] Graphs/Pattern5_Shortest_Path_BFS.md
-- [ ] Heaps/Pattern1_Heap_Fundamentals.md
-- [ ] Heaps/Pattern2_Top_K_Median_Frequency.md
-- [ ] Heaps/Pattern3_Greedy_Merging.md
-- [ ] LinkedList/Pattern1_Basic_Singly_LL_Operations.md
-- [ ] LinkedList/Pattern2_Basic_Doubly_LL_Operations.md
-- [ ] LinkedList/Pattern3_Two_Pointers.md
-- [ ] LinkedList/Pattern4_Reversal_and_Rearrangement.md
-- [ ] LinkedList/Pattern5_Advanced_and_Complex_Problems.md
-- [ ] Recursion/Pattern1_Direct_Divide_and_Conquer.md
-- [ ] Recursion/Pattern2_Subset_Backtracking.md
-- [ ] Recursion/Pattern3_Permutation_Pathfinding_Backtracking.md
-- [ ] SlidingWindowTwoPointer/Pattern1_VariableWindow_FindLength.md
-- [ ] SlidingWindowTwoPointer/Pattern2_VariableWindow_CountSubarrays.md
-- [ ] SlidingWindowTwoPointer/Pattern3_TwoPointers_NonWindow.md
+- [x] DP-2/Pattern3_LCS_Variations.md
+- [x] DP-2/Pattern4_Advanced_String_DP.md
+- [x] DP-2/Pattern5_DP_on_Stocks.md
+- [x] DP-2/Pattern6_Greedy_Approach.md
+- [x] DP-3/Pattern1_DP_on_LIS.md
+- [x] DP-3/Pattern2_Partition_DP_MCM.md
+- [x] DP-3/Pattern3_DP_on_Squares.md
+- [x] Graphs/Pattern1_Graph_Foundations.md
+- [x] Graphs/Pattern2_DFS_Applications.md
+- [x] Graphs/Pattern3_BFS_Applications.md
+- [x] Graphs/Pattern4_Topological_Sort.md
+- [x] Graphs/Pattern5_Shortest_Path_BFS.md
+- [x] Heaps/Pattern1_Heap_Fundamentals.md
+- [x] Heaps/Pattern2_Top_K_Median_Frequency.md
+- [x] Heaps/Pattern3_Greedy_Merging.md
+- [x] LinkedList/Pattern1_Basic_Singly_LL_Operations.md
+- [x] LinkedList/Pattern2_Basic_Doubly_LL_Operations.md
+- [x] LinkedList/Pattern3_Two_Pointers.md
+- [x] LinkedList/Pattern4_Reversal_and_Rearrangement.md
+- [x] LinkedList/Pattern5_Advanced_and_Complex_Problems.md
+- [x] Recursion/Pattern1_Direct_Divide_and_Conquer.md
+- [x] Recursion/Pattern2_Subset_Backtracking.md
+- [x] Recursion/Pattern3_Permutation_Pathfinding_Backtracking.md
+- [x] SlidingWindowTwoPointer/Pattern1_VariableWindow_FindLength.md
+- [x] SlidingWindowTwoPointer/Pattern2_VariableWindow_CountSubarrays.md
+- [x] SlidingWindowTwoPointer/Pattern3_TwoPointers_NonWindow.md
 - [x] StackAndQueue/Pattern1_Basic_Implementation.md
 - [x] StackAndQueue/Pattern2_Implementation_with_Other_DS.md
 - [x] StackAndQueue/Pattern3_Classic_Stack_Applications.md
 - [x] StackAndQueue/Pattern4_Monotonic_Stack.md
 - [x] StackAndQueue/Pattern5_Monotonic_Queue.md
 - [x] StackAndQueue/Pattern6_Advanced_DS_Design.md
-- [ ] Strings/Pattern1_Basic_String_Manipulations.md
-- [ ] Strings/Pattern2_Substring_and_Palindrome_Problems.md
-- [ ] Strings/Pattern3_Character_Frequency_and_Mappings.md
-- [ ] Strings/Pattern4_Advanced_Parsing_and_Special_Cases.md
-- [ ] graphs2/Pattern1_Shortest_Path.md
-- [ ] graphs2/Pattern2_MST.md
-- [ ] graphs2/Pattern3_DSU.md
-- [ ] graphs2/Pattern4_Advanced_Algos.md
+- [x] Strings/Pattern1_Basic_String_Manipulations.md
+- [x] Strings/Pattern2_Substring_and_Palindrome_Problems.md
+- [x] Strings/Pattern3_Character_Frequency_and_Mappings.md
+- [x] Strings/Pattern4_Advanced_Parsing_and_Special_Cases.md
+- [x] graphs2/Pattern1_Shortest_Path.md
+- [x] graphs2/Pattern2_MST.md
+- [x] graphs2/Pattern3_DSU.md
+- [x] graphs2/Pattern4_Advanced_Algos.md

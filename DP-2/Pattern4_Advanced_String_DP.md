@@ -4,67 +4,131 @@ This pattern covers string-based DP problems that, while still often using a 2D 
 
 ---
 
-### 1. Distinct Subsequences (DP-32)
+### 1. Distinct Subsequences
 `[HARD]` `#string-dp` `#count`
 
 #### Problem Statement
 Given two strings, `s` and `t`, count the number of distinct subsequences of `s` which equals `t`.
 
-#### Implementation Overview
--   **DP State:** `dp[i][j]` = the number of distinct subsequences of `s[0...i-1]` that can form the string `t[0...j-1]`.
--   **Recurrence Relation:** We are trying to match `t` using characters from `s`.
-    -   If `s[i-1] != t[j-1]`: The character `s[i-1]` cannot be used to form the end of `t[0...j-1]`. So, the number of ways is the same as if we didn't have `s[i-1]`. `dp[i][j] = dp[i-1][j]`.
-    -   If `s[i-1] == t[j-1]`: The character `s[i-1]` *can* be used. We have two sources of subsequences:
-        1.  We don't use `s[i-1]` to match `t[j-1]`. The number of ways is `dp[i-1][j]`.
-        2.  We *do* use `s[i-1]` to match `t[j-1]`. The number of ways is `dp[i-1][j-1]`.
-        The total is the sum: `dp[i][j] = dp[i-1][j] + dp[i-1][j-1]`.
--   **Base Cases:** `dp[i][0] = 1` for all `i`. There is always one way to form an empty subsequence (by deleting all characters). `dp[0][j] = 0` for `j > 0`. An empty `s` cannot form a non-empty `t`.
+*Example:* `s = "rabbbit"`, `t = "rabbit"`. **Output:** `3`
 
-#### Tricks/Gotchas
--   The DP state can be large, so be mindful of potential integer overflows if the counts are very high. The problem might require using 64-bit integers.
+#### Implementation Overview
+-   **DP State:** `dp[i][j]` = the number of distinct subsequences of `s[0...i-1]` that can form `t[0...j-1]`.
+-   **Recurrence Relation:**
+    -   If `s[i-1] == t[j-1]`: The character `s[i-1]` can be used. The total ways are (ways to form `t` without this `s[i-1]`) + (ways to form `t`'s prefix using this `s[i-1]`). So, `dp[i][j] = dp[i-1][j] + dp[i-1][j-1]`.
+    -   If `s[i-1] != t[j-1]`: The character `s[i-1]` cannot be used. `dp[i][j] = dp[i-1][j]`.
+-   **Base Cases:** `dp[i][0] = 1` for all `i` (one way to form an empty subsequence: delete all chars from `s`).
+-   **Space Optimization:** Can be optimized to O(N) where N is the length of `t`.
+
+#### Python Code Snippet (Space Optimized)
+```python
+def num_distinct(s: str, t: str) -> int:
+    n, m = len(s), len(t)
+    # dp[j] will store the number of ways to form t[:j]
+    dp = [0] * (m + 1)
+    dp[0] = 1 # Base case: one way to form an empty string
+
+    for i in range(1, n + 1):
+        # Iterate backwards to use the dp values from the previous 's' character (i-1)
+        for j in range(m, 0, -1):
+            if s[i-1] == t[j-1]:
+                dp[j] = dp[j] + dp[j-1]
+
+    return dp[m]
+```
 
 ---
 
-### 2. Edit Distance (DP-33)
-`[HARD]` `#string-dp` `#edit-distance`
+### 2. Edit Distance
+`[MEDIUM]` `#string-dp` `#edit-distance`
 
 #### Problem Statement
-Given two strings, `word1` and `word2`, find the minimum number of operations required to convert `word1` to `word2`. The allowed operations are:
-1.  Insert a character
-2.  Delete a character
-3.  Replace a character
+Given two strings, `word1` and `word2`, find the minimum number of operations required to convert `word1` to `word2`. The allowed operations are: insert, delete, or replace a character.
+
+*Example:* `word1 = "horse"`, `word2 = "ros"`. **Output:** `3`
 
 #### Implementation Overview
 This is a classic DP problem, also known as Levenshtein distance.
--   **DP State:** `dp[i][j]` = the minimum number of operations to convert `word1[0...i-1]` to `word2[0...j-1]`.
+-   **DP State:** `dp[i][j]` = min operations to convert `word1[0...i-1]` to `word2[0...j-1]`.
 -   **Recurrence Relation:**
-    -   If `word1[i-1] == word2[j-1]`: The last characters match, so no operation is needed for this position. The cost is the same as the subproblem without these characters: `dp[i][j] = dp[i-1][j-1]`.
-    -   If `word1[i-1] != word2[j-1]`: The characters differ. We must perform one operation. We choose the operation that results from the minimum-cost subproblem:
-        1.  **Insert:** Convert `word1[0...i-1]` to `word2[0...j-2]` and then insert `word2[j-1]`. Cost: `1 + dp[i][j-1]`.
-        2.  **Delete:** Convert `word1[0...i-2]` to `word2[0...j-1]` and then delete `word1[i-1]`. Cost: `1 + dp[i-1][j]`.
-        3.  **Replace:** Convert `word1[0...i-2]` to `word2[0...j-2]` and then replace `word1[i-1]` with `word2[j-1]`. Cost: `1 + dp[i-1][j-1]`.
-        `dp[i][j] = 1 + min(dp[i][j-1], dp[i-1][j], dp[i-1][j-1])`.
--   **Base Cases:** To convert an empty string to `word2[0...j-1]` requires `j` insertions. So `dp[0][j] = j`. To convert `word1[0...i-1]` to an empty string requires `i` deletions. So `dp[i][0] = i`.
+    -   If `word1[i-1] == word2[j-1]`: No operation needed. `dp[i][j] = dp[i-1][j-1]`.
+    -   If they differ, choose the minimum of the three possible operations:
+        1.  **Insert:** `1 + dp[i][j-1]`
+        2.  **Delete:** `1 + dp[i-1][j]`
+        3.  **Replace:** `1 + dp[i-1][j-1]`
+-   **Base Cases:** `dp[0][j] = j` (j insertions) and `dp[i][0] = i` (i deletions).
+
+#### Python Code Snippet (Space Optimized)
+```python
+def min_distance(word1: str, word2: str) -> int:
+    n, m = len(word1), len(word2)
+    prev = [0] * (m + 1)
+    for j in range(m + 1):
+        prev[j] = j # Base case for empty word1
+
+    for i in range(1, n + 1):
+        curr = [0] * (m + 1)
+        curr[0] = i # Base case for empty word2
+        for j in range(1, m + 1):
+            if word1[i-1] == word2[j-1]:
+                curr[j] = prev[j-1]
+            else:
+                insert_op = curr[j-1]
+                delete_op = prev[j]
+                replace_op = prev[j-1]
+                curr[j] = 1 + min(insert_op, delete_op, replace_op)
+        prev = curr
+
+    return prev[m]
+```
 
 ---
 
-### 3. Wildcard Matching (DP-34)
-`[MEDIUM]` `#string-dp` `#wildcard`
+### 3. Wildcard Matching
+`[HARD]` `#string-dp` `#wildcard`
 
 #### Problem Statement
 Given an input string `s` and a pattern `p`, implement wildcard pattern matching with support for `?` and `*`.
 -   `?` Matches any single character.
 -   `*` Matches any sequence of characters (including the empty sequence).
 
+*Example:* `s = "adceb"`, `p = "*a*b"`. **Output:** `true`
+
 #### Implementation Overview
--   **DP State:** `dp[i][j]` = a boolean indicating if the first `i` characters of `s` match the first `j` characters of `p`.
+-   **DP State:** `dp[i][j]` = boolean, if `s[0...i-1]` matches `p[0...j-1]`.
 -   **Recurrence Relation:**
-    -   If `p[j-1]` is a normal character or `?`: The characters must match. `dp[i][j] = (s[i-1] == p[j-1] || p[j-1] == '?') && dp[i-1][j-1]`.
-    -   If `p[j-1]` is `*`: This is the complex case. The `*` can do two things:
-        1.  **Match an empty sequence:** In this case, `*` is ignored, and the result depends on whether `s[0...i]` matches `p[0...j-1]`. This corresponds to `dp[i][j-1]`.
-        2.  **Match one or more characters:** If `*` matches at least one character, it means it matches `s[i-1]`. The result then depends on whether `s[0...i-1]` matches `p[0...j]`. This corresponds to `dp[i-1][j]`.
-        Combining these, `dp[i][j] = dp[i][j-1] || dp[i-1][j]`.
+    -   If `p[j-1]` is `?` or matches `s[i-1]`: Match depends on the previous state, `dp[i-1][j-1]`.
+    -   If `p[j-1]` is `*`: This is complex. The `*` can either match an empty sequence (result is `dp[i][j-1]`) OR match one or more characters (result is `dp[i-1][j]`). So, `dp[i][j] = dp[i][j-1] or dp[i-1][j]`.
+    -   Otherwise, `dp[i][j] = false`.
 -   **Base Cases:**
-    -   `dp[0][0] = true` (empty string matches empty pattern).
-    -   `dp[i][0] = false` for `i > 0` (non-empty string cannot match empty pattern).
-    -   `dp[0][j]` can be true if the prefix of `p` consists only of `*`s. `dp[0][j] = p[j-1] == '*' && dp[0][j-1]`.
+    -   `dp[0][0] = true` (empty matches empty).
+    -   `dp[0][j]` can be true if `p`'s prefix is all `*`.
+
+#### Python Code Snippet (Space Optimized)
+```python
+def is_match_wildcard(s: str, p: str) -> bool:
+    n, m = len(s), len(p)
+    prev = [False] * (m + 1)
+    prev[0] = True # Base case
+
+    # Fill first row for patterns like "a*", "b*", etc.
+    for j in range(1, m + 1):
+        if p[j-1] == '*':
+            prev[j] = prev[j-1]
+
+    for i in range(1, n + 1):
+        curr = [False] * (m + 1)
+        # First column is always false unless s is empty, handled by prev[0]
+        for j in range(1, m + 1):
+            if p[j-1] == '?' or p[j-1] == s[i-1]:
+                curr[j] = prev[j-1]
+            elif p[j-1] == '*':
+                # * matches empty sequence (curr[j-1]) or
+                # * matches one more char (prev[j])
+                curr[j] = curr[j-1] or prev[j]
+            else:
+                curr[j] = False
+        prev = curr
+
+    return prev[m]
+```

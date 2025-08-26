@@ -10,20 +10,20 @@ This pattern focuses on using heaps to solve problems related to finding the "Kt
 #### Problem Statement
 Find the Kth largest element in an unsorted array. Note that it is the Kth largest element in the sorted order, not the Kth distinct element.
 
+*Example:* `nums = [3,2,1,5,6,4]`, `k = 2`. **Output:** `5`.
+
 #### Implementation Overview
 The most efficient heap-based solution uses a **Min-Heap** of size K.
 1.  Iterate through the elements of the array.
 2.  For each element, push it onto the min-heap.
-3.  If the heap's size exceeds K, pop the smallest element. This is key: the heap maintains the K largest elements seen so far at all times.
-4.  After iterating through all elements, the root of the min-heap (the smallest element among the top K) is the Kth largest element in the array.
-
-This approach has a time complexity of O(N log K), which is better than sorting the entire array (O(N log N)) if K is much smaller than N.
+3.  If the heap's size exceeds K, pop the smallest element. This ensures the heap always maintains the K largest elements seen so far.
+4.  After iterating, the root of the min-heap is the Kth largest element.
+This approach is O(N log K).
 
 #### Python Code Snippet
 ```python
 import heapq
-
-def findKthLargest(nums, k):
+def find_kth_largest(nums: list[int], k: int) -> int:
     min_heap = []
     for num in nums:
         heapq.heappush(min_heap, num)
@@ -32,26 +32,34 @@ def findKthLargest(nums, k):
     return min_heap[0]
 ```
 
-#### Related Problems
--   Kth Smallest Element in an Array
--   Kth Largest Element in a Stream
-
 ---
 
 ### 2. Kth Smallest Element in an Array
-`[EASY]` `#top-k` `#max-heap`
+`[MEDIUM]` `#top-k` `#max-heap`
 
 #### Problem Statement
 Find the Kth smallest element in an unsorted array.
 
-#### Implementation Overview
-This is the mirror image of finding the Kth largest element. The optimal heap-based solution uses a **Max-Heap** of size K.
-1.  Iterate through the elements.
-2.  Push the negation of each element onto a min-heap (simulating a max-heap).
-3.  If the heap's size exceeds K, pop the "smallest" element (which is the largest in magnitude, i.e., the largest original number).
-4.  After the loop, the root of the heap is the negation of the Kth smallest element.
+*Example:* `nums = [3,2,1,5,6,4]`, `k = 2`. **Output:** `2`.
 
-This keeps the K smallest elements in the heap at all times. The complexity is also O(N log K).
+#### Implementation Overview
+This is the mirror image of finding the Kth largest. The optimal heap-based solution uses a **Max-Heap** of size K. In Python, this is simulated by pushing negative values onto a min-heap.
+1.  Iterate through the elements.
+2.  Push the negation of each element onto the min-heap.
+3.  If the heap's size exceeds K, pop.
+4.  The root of the heap is the negation of the Kth smallest element.
+
+#### Python Code Snippet
+```python
+import heapq
+def find_kth_smallest(nums: list[int], k: int) -> int:
+    max_heap = []
+    for num in nums:
+        heapq.heappush(max_heap, -num)
+        if len(max_heap) > k:
+            heapq.heappop(max_heap)
+    return -max_heap[0]
+```
 
 ---
 
@@ -59,15 +67,30 @@ This keeps the K smallest elements in the heap at all times. The complexity is a
 `[EASY]` `#top-k` `#stream`
 
 #### Problem Statement
-Design a class to find the Kth largest element in a stream of numbers. The class should have a constructor that takes `k` and an initial array of numbers, and a method `add` that adds a new number to the stream and returns the current Kth largest element.
+Design a class to find the Kth largest element in a stream of numbers.
 
 #### Implementation Overview
-This problem is a direct application of the "Kth Largest" pattern. The class will maintain a **Min-Heap** of size K internally.
--   **Constructor:** Initialize the min-heap with the initial numbers. Crucially, ensure the heap size is trimmed down to K to establish the baseline.
--   **`add(val)` method:**
-    1. Push the new value `val` onto the heap.
-    2. If the heap size is now greater than K, pop the smallest element.
-    3. The root of the heap is always the current Kth largest element, so return it.
+This is a direct application of the "Kth Largest" pattern. The class maintains a **Min-Heap** of size K internally.
+-   **Constructor:** Initialize the min-heap with the initial numbers, ensuring the heap size is trimmed to K.
+-   **`add(val)` method:** Push the new value `val`. If the heap size is now greater than K, pop. The root is the current Kth largest.
+
+#### Python Code Snippet
+```python
+import heapq
+class KthLargest:
+    def __init__(self, k: int, nums: list[int]):
+        self.k = k
+        self.min_heap = nums
+        heapq.heapify(self.min_heap)
+        while len(self.min_heap) > k:
+            heapq.heappop(self.min_heap)
+
+    def add(self, val: int) -> int:
+        heapq.heappush(self.min_heap, val)
+        if len(self.min_heap) > self.k:
+            heapq.heappop(self.min_heap)
+        return self.min_heap[0]
+```
 
 ---
 
@@ -75,25 +98,41 @@ This problem is a direct application of the "Kth Largest" pattern. The class wil
 `[HARD]` `#two-heaps` `#median` `#stream`
 
 #### Problem Statement
-Design a data structure that supports adding numbers from a data stream and allows finding the median of all elements seen so far.
+Design a data structure that supports adding numbers from a data stream and finding the median of all elements seen so far.
 
 #### Implementation Overview
-The key to solving this in O(log n) per insertion is to use **two heaps**:
+The key is to use **two heaps**:
 1.  A **Max-Heap (`small_half`)** to store the smaller half of the numbers.
-2.  A **Min-Heap (`large_half`)** to store the larger half of the numbers.
-
-**Balancing Logic:**
--   The heaps should be kept at roughly the same size. The `max_heap` can have at most one more element than the `min_heap`.
--   When adding a new number, push it onto the `max_heap`. Then, to maintain the heap properties, pop the largest element from `small_half` and push it onto `large_half`.
--   If `large_half` becomes larger than `small_half`, pop the smallest from `large_half` and push it back to `small_half`.
+2.  A **Min-Heap (`large_half`)** to store the larger half.
+The heaps are balanced such that `len(small_half)` is either equal to or one greater than `len(large_half)`.
 
 **Median Calculation:**
--   If the total number of elements is odd, the median is the top of the `max_heap` (`small_half`).
--   If the total is even, the median is the average of the tops of both heaps.
+-   If sizes are equal, median is `(top(small) + top(large)) / 2`.
+-   If `small_half` is larger, median is `top(small)`.
 
-#### Tricks/Gotchas
--   Remember to use negation for the max-heap in Python.
--   Careful handling of the heap balancing logic is critical to ensure correctness.
+#### Python Code Snippet
+```python
+import heapq
+class MedianFinder:
+    def __init__(self):
+        self.small_half = []  # Max-heap (stores negative values)
+        self.large_half = []  # Min-heap
+
+    def addNum(self, num: int) -> None:
+        # Add to max-heap, then move largest to min-heap
+        heapq.heappush(self.small_half, -num)
+        heapq.heappush(self.large_half, -heapq.heappop(self.small_half))
+
+        # Balance the heaps
+        if len(self.large_half) > len(self.small_half):
+            heapq.heappush(self.small_half, -heapq.heappop(self.large_half))
+
+    def findMedian(self) -> float:
+        if len(self.small_half) > len(self.large_half):
+            return -self.small_half[0]
+        else:
+            return (-self.small_half[0] + self.large_half[0]) / 2.0
+```
 
 ---
 
@@ -101,41 +140,85 @@ The key to solving this in O(log n) per insertion is to use **two heaps**:
 `[MEDIUM]` `#top-k` `#frequency` `#hashmap`
 
 #### Problem Statement
-Given an array of integers, return the `k` most frequent elements.
+Given an array of integers `nums` and an integer `k`, return the `k` most frequent elements.
+
+*Example:* `nums = [1,1,1,2,2,3]`, `k = 2`. **Output:** `[1,2]`
 
 #### Implementation Overview
-This is a two-stage problem:
-1.  **Frequency Counting:** Use a Hash Map (dictionary in Python) to count the frequency of each number in the input array. This takes O(N) time.
+1.  **Frequency Counting:** Use a Hash Map to count the frequency of each number (O(N)).
 2.  **Finding Top K:** Use a **Min-Heap** of size K to find the K elements with the highest frequencies.
-    -   Iterate through the (element, frequency) pairs in your hash map.
+    -   Iterate through the `(element, frequency)` pairs.
     -   Push `(frequency, element)` tuples onto the min-heap.
-    -   If the heap size exceeds K, pop the element with the smallest frequency.
-    -   After iterating, the heap will contain the K most frequent elements. Extract them to build the final result.
+    -   If heap size exceeds K, pop.
+    -   After iterating, the heap contains the K most frequent elements.
 
-The heap operations take O(M log K) time, where M is the number of unique elements.
+#### Python Code Snippet
+```python
+import heapq
+from collections import Counter
+def top_k_frequent(nums: list[int], k: int) -> list[int]:
+    if k == len(nums):
+        return nums
+
+    counts = Counter(nums)
+    min_heap = []
+    for num, freq in counts.items():
+        heapq.heappush(min_heap, (freq, num))
+        if len(min_heap) > k:
+            heapq.heappop(min_heap)
+
+    return [num for freq, num in min_heap]
+```
 
 ---
 
 ### 6. Maximum Sum Combination
-`[MEDIUM]` `#top-k` `#merging`
+`[HARD]` `#top-k` `#merging`
 
 #### Problem Statement
 Given two arrays `A` and `B` of equal size, find the `k` largest sum combinations, where a sum combination is `A[i] + B[j]`.
 
-#### Implementation Overview
-A brute-force approach of generating all N*N sums and sorting is too slow (O(N^2 log(N^2))). A better approach uses a heap to intelligently explore the combinations.
-1.  Sort both arrays `A` and `B` in ascending order.
-2.  The largest possible sum is `A[n-1] + B[n-1]`.
-3.  Use a **Max-Heap** to store tuples of `(sum, index_A, index_B)`.
-4.  Initialize the heap with the largest sum: `(A[n-1] + B[n-1], n-1, n-1)`.
-5.  Use a set to keep track of visited `(index_A, index_B)` pairs to avoid duplicates.
-6.  Loop `k` times:
-    a. Pop the max sum from the heap. Add it to the result.
-    b. From the popped `(sum, i, j)`, generate two new candidates to push to the heap (if not visited):
-       - `(A[i-1] + B[j], i-1, j)`
-       - `(A[i] + B[j-1], i, j-1)`
+*Example:* `A = [1, 4, 2, 3]`, `B = [2, 5, 1, 6]`, `k = 4`. **Output:** `[10, 9, 9, 8]`.
 
-This ensures you are always exploring from the largest available sums downwards.
+#### Implementation Overview
+A brute-force O(N^2) approach is too slow. A better way uses a heap.
+1.  Sort both arrays `A` and `B` in descending order.
+2.  The largest possible sum is `A[0] + B[0]`.
+3.  Use a **Max-Heap** to store tuples of `(sum, index_A, index_B)`.
+4.  Initialize the heap with `(A[0] + B[0], 0, 0)`.
+5.  Use a `visited` set to avoid duplicate `(index_A, index_B)` pairs.
+6.  Loop `k` times: Pop the max sum, add it to the result, and push its neighbors `(i+1, j)` and `(i, j+1)` if not visited.
+
+#### Python Code Snippet
+```python
+import heapq
+def k_max_sum_combinations(a: list[int], b: list[int], k: int) -> list[int]:
+    a.sort(reverse=True)
+    b.sort(reverse=True)
+    n = len(a)
+
+    max_heap = [(-(a[0] + b[0]), 0, 0)] # (negative_sum, i, j)
+    visited = {(0, 0)}
+    result = []
+
+    for _ in range(k):
+        if not max_heap: break
+
+        neg_s, i, j = heapq.heappop(max_heap)
+        result.append(-neg_s)
+
+        # Add neighbor (i+1, j)
+        if i + 1 < n and (i + 1, j) not in visited:
+            heapq.heappush(max_heap, (-(a[i+1] + b[j]), i + 1, j))
+            visited.add((i + 1, j))
+
+        # Add neighbor (i, j+1)
+        if j + 1 < n and (i, j + 1) not in visited:
+            heapq.heappush(max_heap, (-(a[i] + b[j+1]), i, j + 1))
+            visited.add((i, j + 1))
+
+    return result
+```
 
 ---
 
@@ -143,14 +226,26 @@ This ensures you are always exploring from the largest available sums downwards.
 `[EASY]` `#ranking` `#sorting`
 
 #### Problem Statement
-Given an array of integers, replace each element with its rank. The rank is 1-based. If two elements are equal, they should have the same rank.
+Given an array of integers, replace each element with its rank. Rank is 1-based. Ties have the same rank.
+
+*Example:* `arr = [40,10,20,30,20]`. **Output:** `[4,1,2,3,2]`.
 
 #### Implementation Overview
-While not a classic heap problem, a heap can be used as a sorting mechanism. The most direct solution involves sorting.
-1.  Create a copy of the original array.
-2.  Sort the copy in ascending order. Using a heap to sort (Heapsort) is one way to do this.
-3.  Create a hash map (`rank_map`) to store the rank of each unique element.
-4.  Iterate through the sorted copy. For each unique element, assign it a rank (e.g., first unique element gets rank 1, second gets rank 2, etc.). Store this in `rank_map`.
-5.  Iterate through the **original array** and use `rank_map` to look up the rank for each element, creating the result array.
+The most direct solution involves sorting.
+1.  Get the unique elements from the array and sort them.
+2.  Create a hash map (`rank_map`) to store the rank of each unique element.
+3.  Iterate through the sorted unique elements and assign ranks: `rank_map[element] = rank`.
+4.  Iterate through the original array and use the map to build the result.
 
-This ensures that ties are handled correctly and the original array order is respected for the output. The complexity is dominated by the sorting step, O(N log N).
+#### Python Code Snippet
+```python
+def array_rank_transform(arr: list[int]) -> list[int]:
+    # Get unique elements and sort them
+    sorted_unique_elements = sorted(list(set(arr)))
+
+    # Create a map from value to rank
+    rank_map = {val: i + 1 for i, val in enumerate(sorted_unique_elements)}
+
+    # Build the result array
+    return [rank_map[val] for val in arr]
+```

@@ -1,12 +1,31 @@
-# Pattern 1: Variable-Size Sliding Window - Finding Max/Min Length
+### `[PATTERN] Variable-Size Sliding Window (Finding Length)`
 
-This pattern is used for problems where we need to find the longest or shortest subarray/substring that satisfies a certain condition. The window size is not fixed; it expands and shrinks dynamically.
+This pattern is used for problems that ask for the **longest** or **shortest** subarray/substring that satisfies a certain condition. The key feature is that the window size is not fixed; it expands and shrinks based on the constraints of the problem.
 
-A common approach involves:
-- Two pointers, `left` and `right`, defining the current window.
-- The `right` pointer always moves forward, expanding the window.
-- The `left` pointer moves forward only when a condition is violated, shrinking the window.
-- A data structure (like a hash map or an array) is often used to track the state of the window (e.g., character counts, sum).
+#### The General Template
+A common template for finding the **maximum** length involves expanding the window and only shrinking it when a condition is violated.
+
+```python
+def variable_window_template(arr):
+    left = 0
+    max_len = 0
+    # State variables (e.g., hash map, count) to track the window's properties
+
+    for right in range(len(arr)):
+        # 1. EXPAND the window by including the element at `right`
+        # Update state variables based on arr[right]
+
+        # 2. SHRINK the window from the left while the condition is invalid
+        while not is_window_valid(state):
+            # Update state variables by removing arr[left]
+            left += 1
+
+        # 3. UPDATE RESULT: The window is now valid.
+        # Calculate the current length and update max_len.
+        max_len = max(max_len, right - left + 1)
+
+    return max_len
+```
 
 ---
 
@@ -16,300 +35,59 @@ A common approach involves:
 #### Problem Statement
 Given a string `s`, find the length of the longest substring that does not contain repeating characters.
 
-*Example:*
-- **Input:** `s = "abcabcbb"`
-- **Output:** `3` (The substring is "abc")
-- **Input:** `s = "bbbbb"`
-- **Output:** `1` (The substring is "b")
-
 #### Implementation Overview
-The core idea is to use a sliding window that always maintains a substring without repeating characters.
-1.  Initialize two pointers, `left = 0` and `right = 0`, a `max_length = 0`, and a hash set `char_set` to store characters in the current window.
-2.  Iterate through the string with the `right` pointer.
-3.  For each character `s[right]`:
-    - If `s[right]` is already in `char_set`, it's a duplicate. We must shrink the window from the left until the duplicate is removed.
-    - Repeatedly remove `s[left]` from `char_set` and increment `left` until `s[right]` is no longer in the set.
-    - Add the current character `s[right]` to `char_set`.
-4.  After handling the current character, the window `[left, right]` is valid. Update `max_length = max(max_length, right - left + 1)`.
-5.  Continue until `right` reaches the end of the string.
+We use a sliding window that maintains the property of having no repeated characters. A hash set is perfect for tracking the characters currently in the window.
+
+1.  **State**: A hash set `char_set` stores the unique characters in the current window `[left, right]`.
+2.  **Expand**: Move the `right` pointer, considering `s[right]`.
+3.  **Shrink Condition**: The window is invalid if `s[right]` is already in `char_set`.
+4.  **Shrink Logic**: While the window is invalid, remove `s[left]` from the `char_set` and increment `left`.
+5.  **Update Result**: After the shrinking phase (if any), the window is guaranteed to be valid. Add `s[right]` to the set and update `max_len`.
 
 #### Python Code Snippet
 ```python
-def lengthOfLongestSubstring(s: str) -> int:
+def length_of_longest_substring(s: str) -> int:
     char_set = set()
     left = 0
     max_len = 0
+
     for right in range(len(s)):
+        # Shrink the window while s[right] is already in the set
         while s[right] in char_set:
             char_set.remove(s[left])
             left += 1
+
+        # Expand the window
         char_set.add(s[right])
-        max_len = max(max_len, right - left + 1)
-    return max_len
-```
 
-#### Tricks/Gotchas
-- **Window Shrinking:** The `while` loop is crucial. It ensures the window is always valid before the `max_len` is calculated for the current `right` pointer position.
-- **Data Structure:** Using a hash set provides efficient O(1) average time complexity for adding, removing, and checking for the existence of characters.
-
-#### Related Problems
-- 3. Fruit Into Baskets
-- 5. Longest Substring with At Most K Distinct Characters
-- 6. Minimum Window Substring
-
----
-
-### 2. Max Consecutive Ones III
-`[MEDIUM]` `#sliding-window`
-
-#### Problem Statement
-Given a binary array `nums` and an integer `k`, return the maximum number of consecutive 1s in the array if you can flip at most `k` 0s.
-
-*Example:*
-- **Input:** `nums = [1,1,1,0,0,0,1,1,1,1,0]`, `k = 2`
-- **Output:** `6` (By flipping the two 0s at indices 4 and 5, we get the subarray `[1,1,1,1,1,1]`)
-
-#### Implementation Overview
-This problem can be rephrased as "find the longest subarray containing at most `k` zeros". This makes it a classic variable-size sliding window problem.
-1.  Initialize `left = 0`, `max_length = 0`, and `zero_count = 0`.
-2.  Iterate through the array with the `right` pointer, expanding the window.
-3.  If `nums[right]` is a `0`, increment `zero_count`.
-4.  If `zero_count` becomes greater than `k`, the window is invalid. We must shrink it from the left until it becomes valid again.
-    - Enter a `while` loop that runs as long as `zero_count > k`.
-    - If `nums[left]` is a `0`, decrement `zero_count`.
-    - Increment `left`.
-5.  After each potential shrink, the window `[left, right]` is valid. Calculate its length and update `max_length`.
-
-#### Python Code Snippet
-```python
-def longestOnes(nums: list[int], k: int) -> int:
-    left = 0
-    max_len = 0
-    zero_count = 0
-    for right in range(len(nums)):
-        if nums[right] == 0:
-            zero_count += 1
-
-        while zero_count > k:
-            if nums[left] == 0:
-                zero_count -= 1
-            left += 1
-
+        # Update the result
         max_len = max(max_len, right - left + 1)
 
     return max_len
 ```
 
-#### Tricks/Gotchas
-- **Problem Rephrasing:** The key is to see this not as a "flipping" problem, but as a "longest subarray with a constraint" problem.
-- **Window Invariant:** The core logic maintains the invariant that the window `[left, right]` never contains more than `k` zeros.
-
-#### Related Problems
-- 4. Longest Repeating Character Replacement
-- 5. Longest Substring with At Most K Distinct Characters
-
 ---
 
-### 3. Fruit Into Baskets
-`[MEDIUM]` `#sliding-window` `#hash-map`
-
-#### Problem Statement
-You are visiting a farm with a single row of fruit trees, represented by an array `fruits` where `fruits[i]` is the type of fruit the `i`-th tree produces. You have two baskets, and each can only hold one type of fruit. Starting from any tree, you pick one fruit from every tree to the right, but you must stop when you encounter a third type of fruit.
-
-Return the maximum number of fruits you can pick.
-
-*Example:*
-- **Input:** `fruits = [1, 2, 1, 2, 3]`
-- **Output:** `4` (The subarray is `[1, 2, 1, 2]`)
-- **Input:** `fruits = [0, 1, 2, 2]`
-- **Output:** `3` (The subarray is `[1, 2, 2]`)
-
-#### Implementation Overview
-This problem is a direct application of the "longest subarray with at most K distinct elements" pattern, where `K=2`.
-1.  Initialize `left = 0`, `max_length = 0`, and a hash map `fruit_counts` to store the frequency of each fruit type in the window.
-2.  Iterate through `fruits` with the `right` pointer to expand the window.
-3.  Add `fruits[right]` to the window by incrementing its count in `fruit_counts`.
-4.  Check if the window has become invalid. The condition for invalidity is having more than 2 distinct fruit types (`len(fruit_counts) > 2`).
-5.  If the window is invalid, shrink it from the left inside a `while` loop:
-    - Decrement the count of `fruits[left]`.
-    - If the count of `fruits[left]` becomes 0, it means that fruit type is no longer in the window, so remove it from the hash map.
-    - Increment `left`.
-6.  The window is now valid. Update `max_length` with the current window size.
-
-#### Python Code Snippet
-```python
-import collections
-
-def totalFruit(fruits: list[int]) -> int:
-    left = 0
-    max_len = 0
-    fruit_counts = collections.defaultdict(int)
-    for right in range(len(fruits)):
-        fruit_counts[fruits[right]] += 1
-        while len(fruit_counts) > 2:
-            fruit_counts[fruits[left]] -= 1
-            if fruit_counts[fruits[left]] == 0:
-                del fruit_counts[fruits[left]]
-            left += 1
-        max_len = max(max_len, right - left + 1)
-    return max_len
-```
-
-#### Tricks/Gotchas
-- **Problem Mapping:** The crucial insight is to map the problem's narrative about baskets and fruits to a standard sliding window pattern.
-- **Hash Map Management:** Correctly managing the hash map by decrementing counts and deleting keys with zero count is essential for the logic to work.
-
-#### Related Problems
-- 1. Longest Substring Without Repeating Characters
-
----
-
-### 7. Maximum Points You Can Obtain from Cards
-`[MEDIUM]` `#sliding-window` `#prefix-sum`
-
-#### Problem Statement
-There are several cards arranged in a row, each with a certain number of points given in the array `cardPoints`. In one step, you can take one card from either the beginning or the end of the row. You must take exactly `k` cards. Your score is the sum of points of the cards you have taken. Return the maximum possible score.
-
-*Example:*
-- **Input:** `cardPoints = [1, 2, 3, 4, 5, 6, 1]`, `k = 3`
-- **Output:** `12` (Take three cards from the right: 1 + 6 + 5 = 12).
-
-#### Implementation Overview
-This problem seems complex due to the choice of taking from either end. However, it can be greatly simplified by inverting the problem.
-
-The `k` cards taken will always consist of a prefix of length `i` and a suffix of length `k-i`. The cards *not* taken will always form a contiguous subarray of length `n-k` in the middle of the original array.
-
-To maximize the sum of the cards taken, we must minimize the sum of the `n-k` cards that are left behind.
-
-1.  Rephrase the problem: Find the minimum sum subarray of size `n-k`.
-2.  Calculate the `total_sum` of all elements in `cardPoints`.
-3.  If `n == k`, all cards must be taken, so the answer is `total_sum`.
-4.  Use a fixed-size sliding window of size `window_size = n - k`.
-5.  Calculate the sum of the initial window (`sum of first n-k elements`). This is our initial `min_window_sum`.
-6.  Slide the window one element at a time to the right. In each step, update the window sum by adding the new element and subtracting the element that just left the window.
-7.  Update `min_window_sum` with the minimum sum found across all windows.
-8.  The final answer is `total_sum - min_window_sum`.
-
-#### Python Code Snippet
-```python
-def maxScore(cardPoints: list[int], k: int) -> int:
-    n = len(cardPoints)
-    window_size = n - k
-    total_sum = sum(cardPoints)
-
-    if window_size == 0:
-        return total_sum
-
-    # Find the sum of the initial window of elements to be left behind
-    current_window_sum = sum(cardPoints[:window_size])
-    min_window_sum = current_window_sum
-
-    # Slide the window to find the minimum sum subarray
-    for i in range(window_size, n):
-        # Add the new element and remove the old one
-        current_window_sum += cardPoints[i] - cardPoints[i - window_size]
-        min_window_sum = min(min_window_sum, current_window_sum)
-
-    return total_sum - min_window_sum
-```
-
-#### Tricks/Gotchas
-- **Problem Inversion:** The core trick is to invert the perspective from "maximizing the sum of ends" to "minimizing the sum of the middle". This transforms a tricky problem into a standard fixed-size sliding window problem.
-- **Fixed vs. Variable Window:** Recognizing that the "leftover" elements form a fixed-size window is key.
-
-#### Related Problems
-This problem's solution is quite unique. The "inversion" technique is a valuable general problem-solving skill.
-- 5. Longest Substring with At Most K Distinct Characters
-
----
-
-### 4. Longest Repeating Character Replacement
-`[MEDIUM]` `#sliding-window` `#hash-map`
-
-#### Problem Statement
-You are given a string `s` and an integer `k`. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most `k` times. Return the length of the longest substring containing the same letter you can get after performing the operations.
-
-*Example:*
-- **Input:** `s = "AABABBA"`, `k = 1`
-- **Output:** `4` (Replace the 'B' at index 2 to 'A' to get "AAAABBA", with a window of "AAAA").
-
-#### Implementation Overview
-The key to this problem is the condition for a valid window: a window is valid if the number of characters that are *not* the most frequent character is at most `k`. This can be expressed as: `window_length - count_of_most_frequent_char <= k`.
-
-1.  Initialize `left = 0`, `max_length = 0`, `max_freq = 0` (to track the frequency of the most common character in the window), and a hash map `char_counts`.
-2.  Iterate through the string with the `right` pointer.
-3.  For each character `s[right]`:
-    - Increment its count in `char_counts`.
-    - Update `max_freq = max(max_freq, char_counts[s[right]])`.
-4.  Check if the current window is invalid by checking if `(right - left + 1) - max_freq > k`.
-5.  If the window is invalid, shrink it from the left:
-    - Decrement the count of `s[left]`.
-    - Increment `left`.
-    - **Note:** We don't need to update `max_freq` when shrinking. The window size will only expand to a new maximum if we find a character with an even higher frequency later on.
-6.  The window size `right - left + 1` is always the candidate for the maximum length. Update `max_length`.
-
-#### Python Code Snippet
-```python
-import collections
-
-def characterReplacement(s: str, k: int) -> int:
-    left = 0
-    max_len = 0
-    max_freq = 0
-    char_counts = collections.defaultdict(int)
-    for right in range(len(s)):
-        char_counts[s[right]] += 1
-        max_freq = max(max_freq, char_counts[s[right]])
-
-        # Check if the window is invalid
-        if (right - left + 1) - max_freq > k:
-            char_counts[s[left]] -= 1
-            left += 1
-
-        max_len = max(max_len, right - left + 1)
-
-    return max_len
-```
-
-#### Tricks/Gotchas
-- **The Condition:** The `window_length - max_freq <= k` condition is the most critical and clever part of this solution.
-- **`max_freq` Optimization:** Understanding why `max_freq` doesn't need to be re-calculated upon shrinking is key to an efficient and clean implementation. The maximum window size is tied to finding a new `max_freq`.
-
-#### Related Problems
-- 2. Max Consecutive Ones III
-
----
-
-### 5. Longest Substring with At Most K Distinct Characters
+### 2. Longest Substring with At Most K Distinct Characters
 `[MEDIUM]` `#sliding-window` `#hash-map`
 
 #### Problem Statement
 Given a string `s` and an integer `k`, find the length of the longest substring of `s` that contains at most `k` distinct characters.
 
-*Example:*
-- **Input:** `s = "eceba"`, `k = 2`
-- **Output:** `3` (The substring is "ece").
-- **Input:** `s = "aa"`, `k = 1`
-- **Output:** `2` (The substring is "aa").
-
 #### Implementation Overview
-This is a classic and fundamental sliding window problem. The window is valid as long as it contains no more than `k` unique characters.
+This is a template problem for this pattern. The window is valid as long as it contains no more than `k` unique characters. A hash map is used to track the frequency of characters in the window.
 
-1.  Initialize `left = 0`, `max_length = 0`, and a hash map `char_counts` to store character frequencies.
-2.  Iterate through the string with the `right` pointer to expand the window.
-3.  Add `s[right]` to the window by incrementing its count in `char_counts`.
-4.  Check for invalidity: `len(char_counts) > k`.
-5.  If the window is invalid, shrink it from the left in a `while` loop until it becomes valid again:
-    - Decrement the count of `s[left]`.
-    - If a character's count drops to 0, remove it from the hash map to keep the distinct count accurate.
-    - Increment `left`.
-6.  The window is now valid. Update `max_length` with the current window size.
+1.  **State**: A hash map `char_counts` stores the frequency of each character in the window.
+2.  **Expand**: Move `right` pointer and increment the count of `s[right]` in `char_counts`.
+3.  **Shrink Condition**: The window is invalid if the number of unique characters (`len(char_counts)`) is greater than `k`.
+4.  **Shrink Logic**: While invalid, decrement the count of `s[left]`. If a character's count drops to 0, remove it from the map. Increment `left`.
+5.  **Update Result**: The window is now valid. Update `max_len`.
 
 #### Python Code Snippet
 ```python
 import collections
 
-def lengthOfLongestSubstringKDistinct(s: str, k: int) -> int:
+def length_of_longest_substring_k_distinct(s: str, k: int) -> int:
     if k == 0:
         return 0
 
@@ -331,55 +109,81 @@ def lengthOfLongestSubstringKDistinct(s: str, k: int) -> int:
     return max_len
 ```
 
-#### Tricks/Gotchas
-- **Template Problem:** This solution serves as a template for many other sliding window problems where the condition is based on a count of distinct elements.
-- **Edge Case `k=0`:** If `k` is 0, no characters are allowed, so the result must be 0.
-
 #### Related Problems
-- 1. Longest Substring Without Repeating Characters
-- 3. Fruit Into Baskets
+- **Fruit Into Baskets**: This is the same problem with `k=2`.
 
 ---
 
-### 6. Minimum Window Substring
-`[HARD]` `#sliding-window` `#hash-map`
+### 3. Longest Repeating Character Replacement
+`[MEDIUM]` `#sliding-window` `#hash-map`
 
 #### Problem Statement
-Given two strings, `s` (the search string) and `t` (the target string), find the minimum-length substring of `s` that contains all the characters of `t`. If no such substring exists, return an empty string `""`.
-
-*Example:*
-- **Input:** `s = "ADOBECODEBANC"`, `t = "ABC"`
-- **Output:** `"BANC"`
-- **Input:** `s = "a"`, `t = "aa"`
-- **Output:** `""`
+You are given a string `s` and an integer `k`. You can change any character to any other character at most `k` times. Return the length of the longest substring containing the same letter you can get.
 
 #### Implementation Overview
-This problem requires a more advanced sliding window. The window is valid if it contains all characters from `t` (respecting frequencies). We want to find the smallest such valid window.
+The key is to define the window's validity condition. A window is valid if the number of characters we need to change to make them all the same is at most `k`. This can be expressed as: `window_length - count_of_most_frequent_char <= k`.
 
-1.  Create a frequency map of characters in `t` (`t_counts`).
-2.  Initialize a frequency map for the current window (`window_counts`).
-3.  Use two variables, `have` and `need`, to track the state of the window. `need` is the number of unique characters in `t`. `have` is the number of unique characters in `t` whose frequency in the window matches their frequency in `t`.
-4.  Expand the window by moving the `right` pointer. For each character, update `window_counts`. If the character is in `t_counts` and its count in the window now matches its required count, increment `have`.
-5.  Once `have == need`, the window is valid. Now, we must try to shrink it from the left to find the minimum possible length.
-6.  Enter a `while` loop that continues as long as the window is valid (`have == need`):
-    - Compare the current window's length to the minimum length found so far and update if it's smaller.
-    - Shrink the window by incrementing `left`.
-    - As `s[left]` is removed, update `window_counts`. If `s[left]` was a required character and its count in the window now drops below what's needed, decrement `have`. This will eventually break the shrink loop.
-7.  After the main loop, if a valid window was found, return the substring corresponding to the stored minimum length window.
+1.  **State**: A hash map `char_counts` for frequencies and a variable `max_freq` to track the frequency of the most common character in the current window.
+2.  **Expand**: Move `right` pointer, update `char_counts[s[right]]`, and update `max_freq`.
+3.  **Shrink Condition**: The window is invalid if `(right - left + 1) - max_freq > k`.
+4.  **Shrink Logic**: If invalid, decrement the count of `s[left]` and increment `left`. (Note: We don't need to re-calculate `max_freq` when shrinking, as the window size can only grow if we find a *new* `max_freq`).
+5.  **Update Result**: The window size `right - left + 1` is always the candidate for the maximum length.
 
 #### Python Code Snippet
 ```python
 import collections
 
-def minWindow(s: str, t: str) -> str:
+def character_replacement(s: str, k: int) -> int:
+    left = 0
+    max_freq = 0
+    char_counts = collections.defaultdict(int)
+
+    for right in range(len(s)):
+        char_counts[s[right]] += 1
+        max_freq = max(max_freq, char_counts[s[right]])
+
+        # Check if the window is invalid
+        if (right - left + 1) - max_freq > k:
+            char_counts[s[left]] -= 1
+            left += 1
+
+    # The result is the size of the final, largest valid window.
+    return right - left + 1
+```
+
+---
+
+### 4. Minimum Window Substring
+`[HARD]` `#sliding-window` `#hash-map`
+
+#### Problem Statement
+Given two strings, `s` (search string) and `t` (target), find the **minimum-length** substring of `s` that contains all the characters of `t` (including duplicates).
+
+#### Implementation Overview
+This problem asks for the *minimum* length, so the template is slightly different. We expand the window until it's valid, and then we shrink it as much as possible while it *remains* valid, updating our result at each step of the shrink phase.
+
+1.  **State**: `t_counts` (a frequency map of `t`), `window_counts` (a frequency map of the current window), `have` (count of characters in the window that meet `t`'s frequency requirements), and `need` (total unique characters in `t`).
+2.  **Expand**: Move `right` pointer. Update `window_counts`. If a character's count in the window now matches its required count in `t`, increment `have`.
+3.  **Shrink Condition**: The window is ready to be shrunk once it becomes valid (`have == need`).
+4.  **Shrink Logic**: While `have == need`:
+    a. **Update Result**: The current window is a candidate for the minimum. Update the result if this window is smaller than the best one found so far.
+    b. **Shrink from left**: Increment `left`. As `s[left]` is removed, update `window_counts`. If `s[left]` was a required character and its count now drops below what's needed, decrement `have`. This will eventually break the shrink loop.
+5.  Continue until `right` reaches the end.
+
+#### Python Code Snippet
+```python
+import collections
+
+def min_window(s: str, t: str) -> str:
     if not t or not s:
         return ""
 
     t_counts = collections.Counter(t)
-    window_counts = {}
+    need = len(t_counts)
+    have = 0
 
-    have, need = 0, len(t_counts)
-    res, res_len = [-1, -1], float('inf')
+    window_counts = {}
+    res_indices, res_len = [-1, -1], float('inf')
     left = 0
 
     for right, char in enumerate(s):
@@ -388,26 +192,60 @@ def minWindow(s: str, t: str) -> str:
         if char in t_counts and window_counts[char] == t_counts[char]:
             have += 1
 
+        # Shrink phase
         while have == need:
             # Update result
             if (right - left + 1) < res_len:
-                res = [left, right]
+                res_indices = [left, right]
                 res_len = right - left + 1
 
-            # Shrink window
+            # Shrink window from the left
             window_counts[s[left]] -= 1
             if s[left] in t_counts and window_counts[s[left]] < t_counts[s[left]]:
                 have -= 1
             left += 1
 
-    l, r = res
+    l, r = res_indices
     return s[l:r+1] if res_len != float('inf') else ""
 ```
 
-#### Tricks/Gotchas
-- **Two-Phase Window:** The logic of "expand until valid, then shrink until invalid" is a common pattern for minimum window problems.
-- **State Tracking:** Precisely tracking `have` and `need` is the most complex part. An error here will lead to incorrect window validation.
-- **Result Storage:** You need to store the indices of the minimum window, not just its length, to be able to return the substring.
+---
+### 5. Maximum Points You Can Obtain from Cards
+`[MEDIUM]` `#sliding-window` `#prefix-sum`
 
-#### Related Problems
-- 1. Longest Substring Without Repeating Characters
+#### Problem Statement
+You must take exactly `k` cards from a row, either from the beginning or the end. Return the maximum possible score.
+
+#### Implementation Overview
+This problem can be cleverly transformed into a standard sliding window problem. Taking `k` cards from the ends is equivalent to *not taking* a contiguous subarray of size `n-k` from the middle. To maximize the sum of the cards taken, we must **minimize the sum of the subarray left behind**.
+
+**Note:** This solution uses a **fixed-size** sliding window, not a variable one, but is included here due to its common association with windowing problems.
+
+1.  **Rephrase**: Find the minimum sum subarray of size `n - k`.
+2.  Calculate the `total_sum` of `cardPoints`.
+3.  Use a fixed-size sliding window of size `window_size = n - k` to find the `min_window_sum`.
+4.  The final answer is `total_sum - min_window_sum`.
+
+#### Python Code Snippet
+```python
+def max_score(cardPoints: list[int], k: int) -> int:
+    n = len(cardPoints)
+    window_size = n - k
+    total_sum = sum(cardPoints)
+
+    # If we must take all cards
+    if window_size == 0:
+        return total_sum
+
+    # Calculate sum of the initial window of elements to be left behind
+    current_window_sum = sum(cardPoints[:window_size])
+    min_window_sum = current_window_sum
+
+    # Slide the fixed-size window to find the minimum sum subarray
+    for i in range(window_size, n):
+        # Add the new element and remove the old one
+        current_window_sum += cardPoints[i] - cardPoints[i - window_size]
+        min_window_sum = min(min_window_sum, current_window_sum)
+
+    return total_sum - min_window_sum
+```

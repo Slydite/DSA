@@ -1,82 +1,29 @@
+### `[PATTERN] Substring and Palindrome Problems`
+
+This pattern focuses on two common categories of string problems: those dealing with properties of substrings (like prefixes and occurrences) and those involving palindromes (strings that read the same forwards and backwards).
+
 ---
+### Palindrome Patterns
 
-### 1. Longest Common Prefix
-`[EASY]` `#string` `#prefix`
+A palindrome is a sequence that reads the same backward as forward. A common and efficient technique for solving many palindrome problems is the **Expand Around Center** method.
 
-#### Problem Statement
-Write a function to find the longest common prefix string amongst an array of strings. If there is no common prefix, return an empty string `""`.
-
-#### Implementation Overview
-There are several ways to solve this, but a simple and effective one is to iterate character by character, comparing the character at each position for all strings.
-
-1.  **Handle Edge Cases**: If the input list is empty, return `""`. If it has one string, return that string.
-2.  **Sort the Array**: A very clever trick is to sort the array of strings lexicographically. The longest common prefix of all the strings will be the common prefix between the *first* and *last* strings in the sorted array.
-3.  **Compare First and Last**:
-    -   Take the first string (`first_str`) and the last string (`last_str`) from the sorted array.
-    -   Iterate through their characters from the beginning.
-    -   Build a `prefix` string by adding characters that are identical in both `first_str` and `last_str`.
-    -   Stop as soon as a mismatch is found.
-4.  Return the resulting `prefix`.
-
-**Alternative (Vertical Scanning):**
-1. Iterate from the first character of the first string (`i = 0, 1, 2, ...`).
-2. For each character `c` at `strs[0][i]`, check if this character exists and is the same at index `i` for all other strings in the array.
-3. If it is, append `c` to the result.
-4. If not (either because a string is too short or the character mismatches), the loop terminates, and you return the prefix found so far.
-
-#### Python Code Snippet (Sorting Method)
-```python
-from typing import List
-
-def longest_common_prefix(strs: List[str]) -> str:
-    """
-    Finds the longest common prefix from a list of strings.
-    """
-    if not strs:
-        return ""
-
-    # Sort the list of strings
-    strs.sort()
-
-    first_str = strs[0]
-    last_str = strs[-1]
-    prefix = []
-
-    # Compare the first and the last string character by character
-    for i in range(len(first_str)):
-        if i < len(last_str) and first_str[i] == last_str[i]:
-            prefix.append(first_str[i])
-        else:
-            # Stop at the first mismatch
-            break
-
-    return "".join(prefix)
-```
-
-#### Tricks/Gotchas
-- **Sorting Approach**: The sorting method is concise and clever. It works because any common prefix must be a prefix of the lexicographically smallest string, and any deviation will show up earliest when comparing it with the lexicographically largest string.
-- **Empty Input**: Always check for an empty list of strings as an edge case.
-
-#### Related Problems
-- Longest Palindromic Substring
+#### The Expand Around Center Method
+The core idea is that any palindrome has a center. This center can be a single character (for odd-length palindromes like "r**a**cecar") or a pair of identical characters (for even-length palindromes like "aa**bb**aa"). By iterating through every possible center and expanding outwards, we can find all palindromic substrings.
 
 ---
 
-### 2. Longest Palindromic Substring
-`[HARD]` `#string` `#palindrome` `#substring` `#expand-around-center`
+### 1. Longest Palindromic Substring
+`[MEDIUM]` `#palindrome` `#expand-around-center`
 
 #### Problem Statement
 Given a string `s`, return the longest palindromic substring in `s`.
 
 #### Implementation Overview
-While this can be solved with dynamic programming, a more intuitive and efficient approach (without DP, as requested) is the **Expand Around Center** method.
-
-The idea is that any palindrome has a "center." This center can be a single character (for odd-length palindromes like "racecar") or a pair of characters (for even-length palindromes like "aabbaa").
-
-1.  **Iterate Through Centers**: Loop through every possible center in the string. There are `2n - 1` such centers: `n` single-character centers and `n-1` double-character centers.
-2.  **Expand and Check**: For each center, expand outwards with two pointers (`left` and `right`) as long as the characters at these pointers match and they are within the bounds of the string.
+We apply the "Expand Around Center" method.
+1.  **Iterate Through Centers**: Loop through every character index `i` in the string. Each `i` can be the center of an odd-length palindrome, and each pair `(i, i+1)` can be the center of an even-length palindrome.
+2.  **Expand**: For each center, use two pointers (`left` and `right`) to expand outwards as long as `s[left] == s[right]` and the pointers are within the string bounds.
 3.  **Track Longest**: Keep track of the start index and length of the longest palindrome found so far.
-4.  **Return Result**: Once all centers have been checked, slice the string using the stored start index and length to return the longest palindromic substring.
+4.  **Return Result**: After checking all centers, slice the string to return the longest one.
 
 #### Python Code Snippet
 ```python
@@ -84,152 +31,175 @@ def longest_palindromic_substring(s: str) -> str:
     if not s or len(s) < 1:
         return ""
 
-    start, end = 0, 0
+    start, max_len = 0, 1
+
+    def expand_around_center(left, right):
+        nonlocal start, max_len
+        while left >= 0 and right < len(s) and s[left] == s[right]:
+            if (right - left + 1) > max_len:
+                max_len = right - left + 1
+                start = left
+            left -= 1
+            right += 1
 
     for i in range(len(s)):
-        # Odd length palindromes (center is one char)
-        len1 = expand_around_center(s, i, i)
-        # Even length palindromes (center is two chars)
-        len2 = expand_around_center(s, i, i + 1)
+        # Odd length palindromes (e.g., "aba")
+        expand_around_center(i, i)
+        # Even length palindromes (e.g., "abba")
+        expand_around_center(i, i + 1)
 
-        max_len = max(len1, len2)
-
-        if max_len > (end - start):
-            start = i - (max_len - 1) // 2
-            end = i + max_len // 2
-
-    return s[start:end+1]
-
-def expand_around_center(s: str, left: int, right: int) -> int:
-    L, R = left, right
-    while L >= 0 and R < len(s) and s[L] == s[R]:
-        L -= 1
-        R += 1
-    # Return the length of the palindrome found
-    return R - L - 1
+    return s[start : start + max_len]
 ```
-
-#### Tricks/Gotchas
-- **Center Types**: Remember to check both odd-length (center `i, i`) and even-length (center `i, i+1`) palindromes for every possible position.
-- **Index Calculation**: Calculating the `start` and `end` indices from the center `i` and `max_len` can be tricky. The formula `start = i - (max_len - 1) // 2` correctly handles both even and odd cases.
-
-#### Related Problems
-- Palindrome Check
-- Count Number of Substrings
 
 ---
 
-### 3. Count Number of Substrings
-`[MEDIUM]` `#string` `#substring` `#sliding-window`
+### 2. Palindromic Substrings
+`[MEDIUM]` `#palindrome` `#expand-around-center`
 
 #### Problem Statement
-This is a general problem type. A common variant is "Count number of substrings with exactly `k` distinct characters" or "at most `k` distinct characters". We will focus on the "at most `k`" variant, as it's a foundational sliding window pattern.
+Given a string `s`, return the number of palindromic substrings in it. Substrings with different start or end indices are counted as different substrings even if they consist of the same characters.
 
 #### Implementation Overview
-The problem of counting substrings with at most `k` distinct characters can be solved efficiently using a sliding window approach.
+This problem is a direct companion to the "Longest Palindromic Substring" problem and uses the same "Expand Around Center" technique. Instead of tracking the longest palindrome, we simply increment a counter for every valid palindrome we find.
 
-1.  **Initialize**:
-    -   `left = 0`: The left pointer of the window.
-    -   `count = 0`: The total count of valid substrings.
-    -   `char_freq = {}`: A hash map to store the frequency of characters inside the current window.
-2.  **Expand Window**: Iterate through the string with a `right` pointer from `0` to `n-1`.
-    -   Add the character `s[right]` to the window and update its frequency in `char_freq`.
-3.  **Shrink Window**:
-    -   While the number of distinct characters in the window (i.e., `len(char_freq)`) is greater than `k`, you must shrink the window from the left.
-    -   Decrement the frequency of `s[left]`. If its frequency becomes `0`, remove it from the map.
-    -   Move the left pointer: `left += 1`.
-4.  **Count Substrings**: After ensuring the window `s[left...right]` is valid (has at most `k` distinct characters), all substrings ending at `right` are also valid. The number of such substrings is `right - left + 1`. Add this to the total `count`.
-5.  Return `count`.
+1.  **Iterate Through Centers**: Loop through every possible center (`i` and `i, i+1`).
+2.  **Expand and Count**: For each center, expand outwards with two pointers. Every time `s[left] == s[right]`, we have found a new valid palindrome, so we increment our `count`.
 
-To solve for **exactly `k`**, use the inclusion-exclusion principle: `count(exactly k) = count(at_most k) - count(at_most k-1)`.
-
-#### Python Code Snippet (At Most K)
+#### Python Code Snippet
 ```python
-from collections import defaultdict
-
-def count_substrings_at_most_k(s: str, k: int) -> int:
-    if not s:
-        return 0
-
-    left = 0
+def count_substrings(s: str) -> int:
     count = 0
-    char_freq = defaultdict(int)
 
-    for right in range(len(s)):
-        char_freq[s[right]] += 1
+    def expand_and_count(left, right):
+        nonlocal count
+        while left >= 0 and right < len(s) and s[left] == s[right]:
+            # Each valid expansion is a new palindromic substring
+            count += 1
+            left -= 1
+            right += 1
 
-        while len(char_freq) > k:
-            char_freq[s[left]] -= 1
-            if char_freq[s[left]] == 0:
-                del char_freq[s[left]]
-            left += 1
-
-        # All substrings ending at `right` are valid
-        count += (right - left + 1)
+    for i in range(len(s)):
+        # Odd length palindromes
+        expand_and_count(i, i)
+        # Even length palindromes
+        expand_and_count(i, i + 1)
 
     return count
 ```
 
-#### Tricks/Gotchas
-- **Sliding Window Logic**: The core idea is that for a valid window `s[left...right]`, every substring that ends at `right` (e.g., `s[right]`, `s[right-1...right]`, etc., down to `s[left...right]`) is also valid.
-- **Inclusion-Exclusion**: The trick to calculate "exactly k" from "at most k" is a very common and powerful pattern.
-
-#### Related Problems
-- Sum of Beauty of all substring
-
 ---
 
-### 4. Sum of Beauty of all Substring
-`[MEDIUM]` `#string` `#substring` `#frequency`
+### 3. Valid Palindrome II
+`[EASY]` `#palindrome` `#two-pointers`
 
 #### Problem Statement
-The beauty of a string is the difference between the frequency of the most frequent character and the least frequent character. Given a string `s`, return the sum of beauty of all of its substrings.
+Given a string `s`, return `true` if `s` can be a palindrome after deleting **at most one** character from it.
 
 #### Implementation Overview
-A brute-force approach that generates every substring and calculates its beauty is the most direct way to solve this. While more optimal solutions exist, they are significantly more complex.
+We use a standard two-pointer approach to check for a palindrome. When we find the first mismatch, we are allowed to "skip" one of the mismatched characters. We then check if the rest of the string is a palindrome.
 
-1.  **Outer Loop (Start of Substring)**: Iterate with a pointer `i` from `0` to `n-1` to select the starting character of a substring.
-2.  **Inner Loop (End of Substring)**: Iterate with a pointer `j` from `i` to `n-1` to generate all substrings starting at `i`.
-3.  **Calculate Beauty for Each Substring**:
-    -   For each substring `s[i...j]`, maintain a frequency map (or an array of size 26).
-    -   Update the frequency of the character `s[j]` in the map.
-    -   Find the maximum frequency (`max_f`) and minimum frequency (`min_f`) among the characters present in the current substring's frequency map.
-    -   The beauty is `max_f - min_f`.
-    -   Add this beauty to a running total `total_beauty`.
-4.  Return `total_beauty`.
+1.  Use two pointers, `left` and `right`, starting at the ends of the string.
+2.  Move them inward. If `s[left] == s[right]`, continue.
+3.  If `s[left] != s[right]`, this is our one chance to delete a character. We have two possibilities:
+    a. Delete the character at `left` and check if the substring `s[left+1...right]` is a palindrome.
+    b. Delete the character at `right` and check if the substring `s[left...right-1]` is a palindrome.
+4.  If either of those checks returns `true`, then the original string can become a palindrome. Otherwise, it cannot.
+5.  If the main loop completes without any mismatches, the string was already a palindrome.
 
 #### Python Code Snippet
 ```python
-from collections import defaultdict
+def valid_palindrome_ii(s: str) -> bool:
+    left, right = 0, len(s) - 1
 
-def sum_of_beauty(s: str) -> int:
-    total_beauty = 0
-    n = len(s)
+    while left < right:
+        if s[left] != s[right]:
+            # Check if it's a palindrome by skipping either left or right
+            skip_left = s[left+1 : right+1]
+            skip_right = s[left : right]
+            return skip_left == skip_left[::-1] or skip_right == skip_right[::-1]
+        left += 1
+        right -= 1
 
-    for i in range(n):
-        # Freq map for substrings starting at i
-        freq = defaultdict(int)
-        for j in range(i, n):
-            # Update frequency for the new character
-            freq[s[j]] += 1
+    return True
+```
 
-            # Calculate beauty for the current substring s[i...j]
-            if len(freq) > 1:
-                max_f = 0
-                min_f = float('inf')
-                # Find min and max frequency among present characters
-                for char_code in freq:
-                    max_f = max(max_f, freq[char_code])
-                    min_f = min(min_f, freq[char_code])
+---
+### Substring and Prefix Patterns
 
-                total_beauty += (max_f - min_f)
+These problems involve finding, comparing, or manipulating substrings and prefixes.
 
-    return total_beauty
+---
+
+### 4. Longest Common Prefix
+`[EASY]` `#prefix` `#string`
+
+#### Problem Statement
+Write a function to find the longest common prefix string amongst an array of strings.
+
+#### Implementation Overview
+A simple and robust method is "Vertical Scanning". We compare characters at the same index across all strings.
+
+1.  **Handle Edge Case**: If the input list `strs` is empty, return `""`.
+2.  **Vertical Scan**: Iterate `i` from `0` to `len(strs[0]) - 1`.
+    a. For each index `i`, take the character `c = strs[0][i]`.
+    b. Then, loop through all other strings in the list (`strs[1:]`).
+    c. Check if the current string is long enough (`i == len(other_str)`) or if its character at index `i` does not match `c`.
+    d. If either is true, it means the common prefix ends just before index `i`. Return `strs[0][:i]`.
+3.  If the outer loop completes, it means the entire first string is a common prefix. Return `strs[0]`.
+
+#### Python Code Snippet
+```python
+from typing import List
+
+def longest_common_prefix(strs: List[str]) -> str:
+    if not strs:
+        return ""
+
+    # Iterate through the characters of the first string
+    for i, char in enumerate(strs[0]):
+        # Compare this character with the character at the same position in all other strings
+        for other_str in strs[1:]:
+            if i >= len(other_str) or other_str[i] != char:
+                # Mismatch found, the prefix is up to index i
+                return strs[0][:i]
+
+    # If the loop completes, the entire first string is the prefix
+    return strs[0]
+```
+
+---
+
+### 5. Find the Index of the First Occurrence in a String (strStr)
+`[EASY]` `#substring`
+
+#### Problem Statement
+Given two strings `needle` and `haystack`, return the index of the first occurrence of `needle` in `haystack`, or `-1` if `needle` is not part of `haystack`.
+
+#### Implementation Overview
+This can be solved with a straightforward sliding window or nested loop approach.
+1.  Get the lengths of both strings, `n` and `m`.
+2.  Iterate through the `haystack` with a pointer `i` from `0` up to `n - m`. This pointer `i` marks the potential start of a match.
+3.  For each `i`, check if the substring of `haystack` of length `m` starting at `i` is equal to `needle`.
+4.  In Python, this is simply `haystack[i : i+m] == needle`.
+5.  If they are equal, return `i`.
+6.  If the loop finishes without finding a match, return `-1`.
+
+#### Python Code Snippet
+```python
+def str_str(haystack: str, needle: str) -> int:
+    n, m = len(haystack), len(needle)
+
+    if m == 0:
+        return 0
+    if n < m:
+        return -1
+
+    for i in range(n - m + 1):
+        if haystack[i : i+m] == needle:
+            return i
+
+    return -1
 ```
 
 #### Tricks/Gotchas
-- **Time Complexity**: This brute-force O(N^2) approach is acceptable for medium constraints. Each inner step (finding min/max) takes O(26) or O(log k), making the overall complexity roughly O(N^2).
-- **Frequency Map Scope**: The frequency map should be initialized inside the outer loop, so it's fresh for each new starting position `i`.
-
-#### Related Problems
-- Count Number of Substrings
+- **Advanced Algorithms**: While the naive O(n*m) approach is simple and often sufficient, more advanced O(n+m) algorithms like **KMP (Knuth-Morris-Pratt)** and **Rabin-Karp** exist for this problem and are good to be aware of.
