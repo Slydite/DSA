@@ -272,4 +272,253 @@ def solve_sudoku(board: list[list[str]]) -> None:
         return True # Goal: No empty cells left, puzzle solved
 
     backtrack()
+
+---
+
+### 10. Expression Add Operators
+`[HARD]` `#recursion` `#backtracking` `#string-manipulation`
+
+#### Problem Statement
+Given a string `num` that contains only digits and an integer `target`, return all possibilities to add binary operators `+`, `-`, or `*` between the digits of `num` so that the resultant expression evaluates to `target`.
+
+#### Implementation Overview
+This is a complex backtracking problem where we build the expression string and evaluate it on the fly. The main difficulty is handling multiplication's higher precedence.
+1.  **Recursive Function**: `dfs(index, path, current_val, prev_operand)`
+    - `prev_operand` is the value of the last operand. This is the key to handling multiplication correctly.
+2.  **Base Case**: If `index` reaches the end of `num`, check if `current_val == target`.
+3.  **Recursive Step**:
+    - Loop `i` from `index` to generate the current number operand.
+    - For each number `s`:
+        - **'+'**: Recurse with `current_val + s` and `prev_operand = s`.
+        - **'-'**: Recurse with `current_val - s` and `prev_operand = -s`.
+        - **'*'**: The new value is `(current_val - prev_operand) + (prev_operand * s)`. The new `prev_operand` becomes `prev_operand * s`.
+
+#### Python Code Snippet
+```python
+def add_operators(num: str, target: int) -> list[str]:
+    result = []
+
+    def backtrack(index, path, current_val, prev_operand):
+        if index == len(num):
+            if current_val == target:
+                result.append(path)
+            return
+
+        for i in range(index, len(num)):
+            # Handle numbers with leading zeros
+            if i > index and num[index] == '0':
+                break
+
+            current_str = num[index:i+1]
+            current_num = int(current_str)
+
+            if index == 0:
+                # First number
+                backtrack(i + 1, current_str, current_num, current_num)
+            else:
+                # Addition
+                backtrack(i + 1, path + "+" + current_str, current_val + current_num, current_num)
+                # Subtraction
+                backtrack(i + 1, path + "-" + current_str, current_val - current_num, -current_num)
+                # Multiplication
+                backtrack(i + 1, path + "*" + current_str,
+                          current_val - prev_operand + (prev_operand * current_num),
+                          prev_operand * current_num)
+
+    backtrack(0, "", 0, 0)
+    return result
+```
+
+---
+
+### 9. M-Coloring Problem
+`[HARD]` `#recursion` `#backtracking` `#graph`
+
+#### Problem Statement
+Given an undirected graph and an integer `M`, determine if the graph can be colored with at most `M` colors such that no two adjacent vertices have the same color.
+
+#### Implementation Overview
+We attempt to color the graph's vertices one by one, from vertex 0 to N-1.
+1.  **Recursive Function**: `solve(node_index, colors_array)`
+2.  **Base Case**: If `node_index == N`, all vertices have been successfully colored. Return `true`.
+3.  **Recursive Step**: For vertex `node_index`:
+    - Loop through each color `c` from 1 to `M`.
+    - Check if it is `isSafe` to assign color `c`. This involves checking all of its neighbors to see if any are already assigned color `c`.
+    - If safe, assign the color, and recurse: `solve(node_index + 1, ...)`.
+    - If the recursive call is true, a solution was found. Propagate `true`.
+    - If not, backtrack by resetting the color and try the next color.
+4. If no color works, return `false`.
+
+#### Python Code Snippet
+```python
+def can_m_color(graph: list[list[int]], m: int, n: int) -> bool:
+    colors = [0] * n # 0 means no color
+
+    def is_safe(node, color):
+        for neighbor in graph[node]:
+            if colors[neighbor] == color:
+                return False
+        return True
+
+    def solve(node_idx):
+        if node_idx == n:
+            return True
+
+        for c in range(1, m + 1):
+            if is_safe(node_idx, c):
+                colors[node_idx] = c
+                if solve(node_idx + 1):
+                    return True
+                colors[node_idx] = 0 # Backtrack
+
+        return False
+
+    return solve(0)
+```
+
+---
+
+### 8. Word Break
+`[MEDIUM]` `#recursion` `#backtracking` `#dynamic-programming`
+
+#### Problem Statement
+Given a string `s` and a dictionary of strings `wordDict`, return `true` if `s` can be segmented into a space-separated sequence of one or more dictionary words.
+
+#### Implementation Overview
+This is a partitioning problem where we check if any prefix of the string is a valid word. If it is, we recursively check if the remaining suffix can also be broken down.
+1.  **Recursive Function**: `can_break(substring)`
+2.  **Base Case**: If `substring` is empty, the original string has been successfully segmented. Return `true`.
+3.  **Recursive Step**:
+    - Iterate `i` from 1 to `len(substring)`.
+    - Check if the `prefix` (`substring[0...i]`) is in the `wordDict`.
+    - If it is, recurse on the `suffix`: `can_break(substring[i...])`.
+    - If the recursive call is true, we have a valid path. Return `true`.
+4.  If the loop finishes, no valid segmentation was found. Return `false`.
+5.  **Optimization**: This has overlapping subproblems and can be optimized with memoization (DP).
+
+#### Python Code Snippet
+```python
+def word_break(s: str, wordDict: list[str]) -> bool:
+    word_set = set(wordDict)
+    memo = {}
+
+    def solve(substring):
+        if not substring:
+            return True
+        if substring in memo:
+            return memo[substring]
+
+        for i in range(1, len(substring) + 1):
+            prefix = substring[:i]
+            if prefix in word_set and solve(substring[i:]):
+                memo[substring] = True
+                return True
+
+        memo[substring] = False
+        return False
+
+    return solve(s)
+```
+
+---
+
+### 7. Rat in a Maze
+`[MEDIUM]` `#recursion` `#backtracking` `#matrix`
+
+#### Problem Statement
+Given a square maze `m` of size `N x N` where `1` means the block is open and `0` is a wall. A rat starts at `(0, 0)` and wants to reach `(N-1, N-1)`. Find all possible paths.
+
+#### Implementation Overview
+This is a DFS on a grid problem. We explore all possible paths, backtracking when we hit a wall or a visited cell.
+1.  **Recursive Function**: `find_paths(row, col, maze, current_path, visited)`
+2.  **Base Case**: If the rat is at the destination, add `current_path` to results.
+3.  **Recursive Step & Constraints**:
+    - Mark current cell as visited.
+    - Explore all 4 directions (D, L, R, U).
+    - For each valid move (in-bounds, not a wall, not visited), recurse.
+    - Backtrack by un-marking the current cell as visited.
+
+#### Python Code Snippet
+```python
+def find_rat_maze_paths(m: list[list[int]]) -> list[str]:
+    n = len(m)
+    if m[0][0] == 0 or m[n-1][n-1] == 0:
+        return []
+
+    result = []
+    visited = [[False for _ in range(n)] for _ in range(n)]
+
+    def solve(r, c, current_path):
+        if r == n - 1 and c == n - 1:
+            result.append(current_path)
+            return
+
+        # D, L, R, U order
+        # Down
+        if r + 1 < n and not visited[r+1][c] and m[r+1][c] == 1:
+            visited[r][c] = True
+            solve(r + 1, c, current_path + 'D')
+            visited[r][c] = False
+        # Left
+        if c - 1 >= 0 and not visited[r][c-1] and m[r][c-1] == 1:
+            visited[r][c] = True
+            solve(r, c - 1, current_path + 'L')
+            visited[r][c] = False
+        # Right
+        if c + 1 < n and not visited[r][c+1] and m[r][c+1] == 1:
+            visited[r][c] = True
+            solve(r, c + 1, current_path + 'R')
+            visited[r][c] = False
+        # Up
+        if r - 1 >= 0 and not visited[r-1][c] and m[r-1][c] == 1:
+            visited[r][c] = True
+            solve(r - 1, c, current_path + 'U')
+            visited[r][c] = False
+
+    solve(0, 0, "")
+    return result
+```
+
+---
+
+### 6. Palindrome Partitioning
+`[MEDIUM]` `#recursion` `#backtracking`
+
+#### Problem Statement
+Given a string `s`, partition `s` such that every substring of the partition is a palindrome. Return all possible palindrome partitionings of `s`.
+
+#### Implementation Overview
+The strategy is to iterate through all possible prefixes of the current string. If a prefix is a palindrome, we add it to our current partition and recursively solve for the rest of the string.
+1.  **Recursive Function**: `partition_helper(start_index, current_partition)`
+2.  **Base Case**: If `start_index` reaches the end of the string, a valid partition is found.
+3.  **Recursive Step**:
+    - Loop `i` from `start_index` to the end of the string.
+    - The substring `s[start_index...i]` is a potential first piece of the partition.
+    - If this substring is a palindrome, add it to `current_partition` and recurse on the rest: `partition_helper(i + 1, ...)`.
+    - Backtrack by removing the substring from `current_partition`.
+
+#### Python Code Snippet
+```python
+def partition_palindrome(s: str) -> list[list[str]]:
+    result = []
+    current_partition = []
+
+    def is_palindrome(sub: str) -> bool:
+        return sub == sub[::-1]
+
+    def backtrack(start_index):
+        if start_index == len(s):
+            result.append(list(current_partition))
+            return
+
+        for i in range(start_index, len(s)):
+            prefix = s[start_index : i + 1]
+            if is_palindrome(prefix):
+                current_partition.append(prefix)
+                backtrack(i + 1)
+                current_partition.pop()
+
+    backtrack(0)
+    return result
+```
 ```

@@ -243,6 +243,43 @@ def sort_array(nums: list[int]) -> list[int]:
 
 ---
 
+### 9. Reverse a Stack using Recursion
+`[EASY]` `#recursion` `#stack`
+
+#### Problem Statement
+Given a stack, reverse its elements using only recursion and the standard stack operations. You are not allowed to use any explicit loops.
+
+#### Implementation Overview
+This solution is structurally similar to sorting a stack. It uses a main recursive function to peel off the top element and a helper function to insert that element at the bottom of the reversed smaller stack.
+1.  **`reverse(stack)`:** The main function.
+    - **Base Case:** If the stack is empty, there is nothing to reverse.
+    - **Recursive Step:** Pop the top element (`temp`). Recursively call `reverse` on the rest of the stack. After the smaller stack is fully reversed, insert `temp` at the very bottom of it using a helper.
+2.  **`insertAtBottom(stack, element)`:** This helper function inserts an element at the bottom of a stack.
+    - **Base Case:** If the stack is empty, just push the `element`.
+    - **Recursive Step:** Pop the top element (`top`), recursively call `insertAtBottom`, and then push `top` back onto the stack. This ensures `element` ends up at the bottom.
+
+#### Python Code Snippet
+```python
+def reverse_stack(stack: list):
+    if not stack:
+        return
+
+    temp = stack.pop()
+    reverse_stack(stack)
+    insert_at_bottom(stack, temp)
+
+def insert_at_bottom(stack: list, element: int):
+    if not stack:
+        stack.append(element)
+        return
+
+    temp = stack.pop()
+    insert_at_bottom(stack, element)
+    stack.append(temp)
+```
+
+---
+
 ### 8. Sort a Stack using Recursion
 `[MEDIUM]` `#recursion` `#stack`
 

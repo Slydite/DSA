@@ -247,4 +247,194 @@ def generate_parenthesis(n: int) -> list[str]:
 
     backtrack("", 0, 0)
     return result
+
+---
+
+### 10. Combination Sum III
+`[MEDIUM]` `#recursion` `#backtracking` `#combinations`
+
+#### Problem Statement
+Find all valid combinations of `k` numbers that sum up to `n` such that:
+- Only numbers from 1 to 9 are used.
+- Each number is used at most once.
+
+#### Implementation Overview
+This is a highly constrained combination sum problem.
+1.  **Recursive Function**: `find_combinations(start_num, k, n, current_combination)`
+2.  **Base Case**:
+    - If `len(current_combination) == k` and `n == 0`, we have found a valid combination.
+    - Return if `n < 0` or `len(current_combination) == k`.
+3.  **Recursive Step**:
+    - Iterate from `start_num` to 9.
+    - For each number `i`, add it to the combination and recurse with `find_combinations(i + 1, k, n - i, ...)`. We use `i + 1` as the next start because each number can be used at most once.
+    - Backtrack by removing `i`.
+
+#### Python Code Snippet
+```python
+def combination_sum_3(k: int, n: int) -> list[list[int]]:
+    result = []
+
+    def backtrack(start_num, remaining_k, remaining_n, current_combo):
+        if remaining_k == 0 and remaining_n == 0:
+            result.append(list(current_combo))
+            return
+
+        if remaining_k == 0 or remaining_n < 0:
+            return
+
+        for i in range(start_num, 10):
+            current_combo.append(i)
+            backtrack(i + 1, remaining_k - 1, remaining_n - i, current_combo)
+            current_combo.pop()
+
+    backtrack(1, k, n, [])
+    return result
+```
+
+---
+
+### 9. Subset Sum I
+`[EASY]` `#recursion` `#backtracking` `#subsequences`
+
+#### Problem Statement
+Given a list of `N` integers, find the sum of all the subsets in it.
+
+#### Implementation Overview
+This is a direct application of the "pick/don't-pick" pattern. We generate all subsets and record the sum of each one.
+1.  **Recursive Function**: `find_sums(index, current_sum)`
+2.  **Base Case**: When `index` reaches the end of the array, `current_sum` represents the sum of one complete subset. Add this sum to the result list.
+3.  **Recursive Step**: At `index`:
+    -   **Pick**: Make a recursive call for the next index with an updated sum: `find_sums(index + 1, current_sum + arr[index])`.
+    -   **Don't-Pick**: Make a recursive call for the next index with the same sum: `find_sums(index + 1, current_sum)`.
+
+#### Python Code Snippet
+```python
+def subset_sums(arr: list[int]) -> list[int]:
+    result = []
+    def find_sums(index, current_sum):
+        if index == len(arr):
+            result.append(current_sum)
+            return
+
+        # Pick the element
+        find_sums(index + 1, current_sum + arr[index])
+
+        # Don't pick the element
+        find_sums(index + 1, current_sum)
+
+    find_sums(0, 0)
+    return sorted(result)
+```
+
+---
+
+### 8. Check if there exists a Subsequence with Sum K
+`[MEDIUM]` `#recursion` `#backtracking` `#subsequences`
+
+#### Problem Statement
+Given an array of non-negative integers `arr` and a target sum `K`, determine if there is a subsequence of `arr` with a sum equal to `K`.
+
+#### Implementation Overview
+This is a decision-based version of the previous problem. We just need to find one valid subsequence. The recursive function can return a boolean.
+1.  **Recursive Function**: `check_sum(index, target)`
+2.  **Base Case**:
+    - If `target == 0`, we have found a valid subsequence. Return `True`.
+    - If `index` reaches the end of the array (and `target` is not 0), this path is a dead end. Return `False`.
+3.  **Recursive Step**: At `index`:
+    -   **Pick**: If `arr[index] <= target`, make a recursive call `check_sum(index + 1, target - arr[index])`. If this call returns `True`, return `True`.
+    -   **Don't-Pick**: If the "pick" path didn't return `True`, explore the "don't-pick" path: `check_sum(index + 1, target)`.
+    -   The result is `pick_result or dont_pick_result`.
+
+#### Python Code Snippet
+```python
+def check_if_subsequence_sum_exists(arr: list[int], k: int) -> bool:
+    def solve(index, target):
+        if target == 0:
+            return True
+        if index == len(arr):
+            return False
+
+        # Don't pick
+        dont_pick_result = solve(index + 1, target)
+        if dont_pick_result:
+            return True
+
+        # Pick
+        pick_result = False
+        if arr[index] <= target:
+            pick_result = solve(index + 1, target - arr[index])
+
+        return pick_result
+
+    return solve(0, k)
+```
+
+---
+
+### 7. Count all Subsequences with Sum K
+`[MEDIUM]` `#recursion` `#backtracking` `#subsequences`
+
+#### Problem Statement
+Given an array of integers `arr` and an integer `K`, count the total number of subsequences of `arr` that sum up to `K`.
+
+#### Implementation Overview
+This is a "pick/don't-pick" problem where the recursive function returns the count of valid subsequences found from its state.
+1.  **Recursive Function**: `count_subsequences(index, current_sum)`
+2.  **Base Case**: When `index` reaches the end of the array:
+    - If `current_sum == K`, we have found one valid subsequence. Return 1.
+    - Otherwise, return 0.
+3.  **Recursive Step**: At `index`:
+    -   **Pick**: Call `count_subsequences(index + 1, current_sum + arr[index])`.
+    -   **Don't-Pick**: Call `count_subsequences(index + 1, current_sum)`.
+    -   The total count is the sum of the results from both calls.
+
+#### Python Code Snippet
+```python
+def count_subsequences_with_sum_k(arr: list[int], k: int) -> int:
+    def solve(index, current_sum):
+        if index == len(arr):
+            return 1 if current_sum == k else 0
+
+        # Pick the element
+        pick_count = solve(index + 1, current_sum + arr[index])
+
+        # Don't pick the element
+        dont_pick_count = solve(index + 1, current_sum)
+
+        return pick_count + dont_pick_count
+
+    return solve(0, 0)
+```
+
+---
+
+### 6. Generate all Binary Strings
+`[EASY]` `#recursion` `#backtracking`
+
+#### Problem Statement
+Given a positive integer `N`, generate all possible binary strings of length `N`.
+
+#### Implementation Overview
+For each position in the string, we have two choices: '0' or '1'. We can use recursion to explore these choices.
+1.  **Recursive Function**: `generate(index, current_string)`
+2.  **Base Case**: When `index == N`, a complete string has been formed. Add it to results.
+3.  **Recursive Step**:
+    -   Call `generate(index + 1, current_string + '0')`.
+    -   Call `generate(index + 1, current_string + '1')`.
+
+#### Python Code Snippet
+```python
+def generate_binary_strings(N: int) -> list[str]:
+    result = []
+    def generate(index, current_string):
+        if index == N:
+            result.append(current_string)
+            return
+
+        generate(index + 1, current_string + '0')
+        generate(index + 1, current_string + '1')
+
+    generate(0, "")
+    return result
+```
 ```
