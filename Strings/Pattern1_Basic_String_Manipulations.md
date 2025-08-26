@@ -241,4 +241,74 @@ def int_to_roman(num: int) -> str:
             num -= val
 
     return "".join(result)
+
+---
+
+### 9. Reverse Every Word in a String
+`[EASY]` `#string` `#reversal`
+
+#### Problem Statement
+Given a string `s`, reverse each word in the string. The order of the words and the whitespace should be preserved.
+
+#### Implementation Overview
+This is a direct application of string manipulation.
+1.  **Split the String**: Split the input string `s` into a list of words.
+2.  **Reverse Each Word**: Iterate through the list of words. For each word, reverse it.
+3.  **Join the Words**: Join the list of reversed words back into a single string, using a space as the separator.
+
+#### Python Code Snippet
+```python
+def reverse_each_word(s: str) -> str:
+    words = s.split(' ')
+    reversed_words = [word[::-1] for word in words]
+    return " ".join(reversed_words)
+```
+
+---
+
+### 8. Check if One String is a Rotation of Another
+`[EASY]` `#string` `#concatenation`
+
+#### Problem Statement
+Given two strings, `s1` and `s2`, return `true` if `s2` is a rotation of `s1`, and `false` otherwise. For example, `"waterbottle"` is a rotation of `"erbottlewat"`.
+
+#### Implementation Overview
+This problem has a famously clever and simple solution.
+1.  **Length Check**: If `s1` and `s2` have different lengths, `s2` cannot be a rotation of `s1`.
+2.  **Concatenation**: Create a new string by concatenating `s1` with itself (`s1 + s1`).
+3.  **Substring Check**: If `s2` is a rotation of `s1`, then `s2` must be a substring of the new concatenated string. Check if `s2` exists within `s1 + s1`.
+
+#### Python Code Snippet
+```python
+def is_rotation(s1: str, s2: str) -> bool:
+    if len(s1) != len(s2) or not s1:
+        return False
+
+    concatenated_s1 = s1 + s1
+    return s2 in concatenated_s1
+```
+
+---
+
+### 7. Largest Odd Number in String
+`[EASY]` `#string` `#greedy`
+
+#### Problem Statement
+You are given a string `num`, representing a large integer. Return the largest-valued odd integer (as a string) that is a non-empty substring of `num`, or an empty string `""` if no odd integer exists.
+
+#### Implementation Overview
+A greedy approach is most effective. The largest odd number will be the longest possible prefix of the original number that ends in an odd digit.
+1.  **Iterate from the End**: Traverse the string `num` from right to left.
+2.  **Find First Odd Digit**: The first digit you encounter that is odd will be the last digit of the largest possible odd number substring.
+3.  **Return the Prefix**: Once you find the first odd digit from the right at index `i`, the substring `num[:i+1]` is the answer.
+4.  **No Odd Digits**: If the loop finishes, no odd digits were found. Return `""`.
+
+#### Python Code Snippet
+```python
+def largest_odd_number(num: str) -> str:
+    for i in range(len(num) - 1, -1, -1):
+        if int(num[i]) % 2 != 0:
+            return num[:i+1]
+    return ""
+```
 ```

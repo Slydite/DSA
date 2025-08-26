@@ -149,6 +149,42 @@ def character_replacement(s: str, k: int) -> int:
 
     # The result is the size of the final, largest valid window.
     return right - left + 1
+
+---
+
+### 4. Max Consecutive Ones III
+`[MEDIUM]` `#sliding-window`
+
+#### Problem Statement
+Given a binary array `nums` and an integer `k`, return the maximum number of consecutive 1s in the array if you can flip at most `k` 0s.
+
+#### Implementation Overview
+This problem can be rephrased as "find the longest subarray containing at most `k` zeros". This makes it a classic variable-size sliding window problem.
+1.  Initialize `left = 0`, `max_len = 0`, and `zero_count = 0`.
+2.  Iterate through the array with the `right` pointer, expanding the window.
+3.  If `nums[right]` is a `0`, increment `zero_count`.
+4.  If `zero_count` becomes greater than `k`, the window is invalid. Shrink it from the left until it becomes valid again.
+5.  After each potential shrink, the window `[left, right]` is valid. Calculate its length and update `max_len`.
+
+#### Python Code Snippet
+```python
+def longest_ones(nums: list[int], k: int) -> int:
+    left = 0
+    zero_count = 0
+    max_len = 0
+    for right in range(len(nums)):
+        if nums[right] == 0:
+            zero_count += 1
+
+        while zero_count > k:
+            if nums[left] == 0:
+                zero_count -= 1
+            left += 1
+
+        max_len = max(max_len, right - left + 1)
+
+    return max_len
+```
 ```
 
 ---

@@ -204,5 +204,48 @@ def floyd_warshall(n: int, edges: list[tuple[int, int, int]]) -> list[list[int]]
                     dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
 
     return dist
+
+---
+
+### 6. Minimum Steps to Reach End
+`[MEDIUM]` `#dijkstra` `#implicit-graph`
+
+#### Problem Statement
+Given an array `arr` and two numbers `start` and `end`, find the minimum steps to reach `end` from `start` by performing multiplication and modulo operations. In one step, you can go from `x` to `(x * arr[i]) % 100000`.
+
+#### Implementation Overview
+This is a shortest path problem on an implicit graph where nodes are numbers from 0 to 99999.
+-   **Nodes**: Numbers from 0 to 99999.
+-   **Edges**: An edge exists from `x` to `y` if `y = (x * arr[i]) % 100000` for some `arr[i]`. Each edge has a weight of 1.
+-   **Algorithm**: Since edge weights are uniform (1), this is a shortest path on an unweighted graph problem. However, because we are looking for the shortest path from a single source, Dijkstra's algorithm is a very natural fit (and would work even if weights weren't uniform).
+
+#### Python Code Snippet
+```python
+import heapq
+
+def minimum_steps(arr: list[int], start: int, end: int) -> int:
+    mod = 100000
+    dist = {i: float('inf') for i in range(mod)}
+    dist[start] = 0
+
+    pq = [(0, start)] # (steps, number)
+
+    while pq:
+        steps, u = heapq.heappop(pq)
+
+        if u == end:
+            return steps
+
+        if steps > dist[u]:
+            continue
+
+        for num in arr:
+            v = (u * num) % mod
+            if dist[u] + 1 < dist[v]:
+                dist[v] = dist[u] + 1
+                heapq.heappush(pq, (dist[v], v))
+
+    return -1
+```
 ```
 - **Common Applications**: Find the City With the Smallest Number of Neighbors at a Threshold Distance. After running Floyd-Warshall, you can easily check the distance from any city to any other city.

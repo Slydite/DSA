@@ -236,4 +236,51 @@ class Twitter:
 
     def unfollow(self, followerId: int, followeeId: int) -> None:
         self.user_follows[followerId].discard(followeeId)
+
+---
+
+### 6. Sort a K-Sorted Array
+`[MEDIUM]` `#k-way-merge` `#min-heap` `#sorting`
+
+#### Problem Statement
+You are given a "K-Sorted" array, where each element is at most `k` positions away from its sorted position. Sort the array efficiently.
+
+*Example:* `arr = [6, 5, 3, 2, 8, 10, 9]`, `k = 3`. **Output:** `[2, 3, 5, 6, 8, 9, 10]`.
+
+#### Implementation Overview
+A naive sort would be O(N log N). We can do better by using a min-heap of size `k+1`, which leverages the "nearly sorted" property.
+1.  Create a min-heap and populate it with the first `k+1` elements from the array.
+2.  Initialize a `result` array and an `index` for placing sorted elements.
+3.  Iterate through the rest of the array (from index `k+1` onwards):
+    a. Extract the minimum element from the heap and place it at the current `index` in the result array.
+    b. Push the current element from the input array (`arr[i]`) into the heap.
+4.  After the loop, the heap will still contain `k+1` elements. Pop them one by one and add them to the result array.
+
+#### Python Code Snippet
+```python
+import heapq
+
+def sort_k_sorted_array(arr: list[int], k: int) -> list[int]:
+    n = len(arr)
+    # Create a min-heap with the first k+1 elements
+    min_heap = arr[:k+1]
+    heapq.heapify(min_heap)
+
+    result_idx = 0
+
+    # Iterate through the rest of the elements
+    for i in range(k + 1, n):
+        # The smallest element in the heap is the next sorted element
+        arr[result_idx] = heapq.heappop(min_heap)
+        result_idx += 1
+        # Add the new element to the heap
+        heapq.heappush(min_heap, arr[i])
+
+    # Empty the remaining elements from the heap
+    while min_heap:
+        arr[result_idx] = heapq.heappop(min_heap)
+        result_idx += 1
+
+    return arr
+```
 ```

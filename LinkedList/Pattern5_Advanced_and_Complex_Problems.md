@@ -340,4 +340,59 @@ def merge_k_lists(lists: list[ListNode]) -> ListNode:
             heapq.heappush(min_heap, (next_node.val, i, next_node))
 
     return dummy_head.next
+
+---
+
+### 5. Sort List
+`[MEDIUM]` `#divide-and-conquer` `#merge-sort` `#linked-list`
+
+#### Problem Statement
+Given the `head` of a linked list, return the list after sorting it in ascending order.
+
+#### Implementation Overview
+The most suitable sorting algorithm for linked lists is **Merge Sort**, due to its efficiency (O(N log N)) and the fact that it doesn't rely on random access. The process is a classic divide-and-conquer strategy.
+
+1.  **Base Case**: If the list has 0 or 1 nodes, it is already sorted. Return `head`.
+2.  **Divide**:
+    -   Split the linked list into two halves. Find the middle of the list using the slow/fast pointer technique.
+    -   Sever the link between the two halves to create two independent lists.
+3.  **Conquer**:
+    -   Recursively call `sortList()` on both the left half and the right half.
+4.  **Merge**:
+    -   Merge the two now-sorted halves into a single sorted list. This is done with a helper function that iteratively picks the smaller element from the two half-lists.
+
+#### Python Code Snippet
+```python
+def sort_list(head: ListNode) -> ListNode:
+    if not head or not head.next:
+        return head
+
+    # Find middle of the list
+    slow, fast = head, head.next
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+    # Split the list into two halves
+    mid = slow.next
+    slow.next = None
+
+    # Recursively sort both halves
+    left = sort_list(head)
+    right = sort_list(mid)
+
+    # Merge the sorted halves
+    dummy = tail = ListNode()
+    while left and right:
+        if left.val < right.val:
+            tail.next = left
+            left = left.next
+        else:
+            tail.next = right
+            right = right.next
+        tail = tail.next
+
+    tail.next = left or right
+    return dummy.next
+```
 ```

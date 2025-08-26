@@ -282,4 +282,232 @@ def is_palindrome(head: ListNode) -> bool:
         right = right.next
 
     return True
+
+---
+
+### 6. Segregate Odd and Even Nodes
+`[MEDIUM]` `#rearrangement` `#linked-list`
+
+#### Problem Statement
+Given the `head` of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return the reordered list. The relative order within the odd and even groups should remain the same.
+
+#### Implementation Overview
+The goal is to create two separate lists—one for odd-indexed nodes and one for even-indexed nodes—and then link them.
+1.  **Handle Edge Cases**: If the list has 0, 1, or 2 nodes, it's already segregated.
+2.  **Initialize Pointers**:
+    -   `odd = head` (points to the tail of the odd-indexed list)
+    -   `even_head = head.next` (a fixed pointer to the head of the even list)
+    -   `even = even_head` (points to the tail of the even-indexed list)
+3.  **Traverse and Relink**:
+    -   Iterate as long as `even` and `even.next` are valid.
+    -   Link the next odd node: `odd.next = even.next`. Move `odd` forward.
+    -   Link the next even node: `even.next = odd.next`. Move `even` forward.
+4.  **Connect the Lists**: After the loop, the `odd` pointer is at the tail of the odd list. Connect it to the head of the even list: `odd.next = even_head`.
+
+#### Python Code Snippet
+```python
+def odd_even_list(head: ListNode) -> ListNode:
+    if not head or not head.next:
+        return head
+
+    odd = head
+    even_head = head.next
+    even = even_head
+
+    while even and even.next:
+        odd.next = even.next
+        odd = odd.next
+
+        even.next = odd.next
+        even = even.next
+
+    # Connect the odd list to the even list
+    odd.next = even_head
+
+    return head
+
+---
+
+### 10. Remove Duplicates from Sorted DLL
+`[EASY]` `#doubly-linked-list` `#deletion`
+
+#### Problem Statement
+Given a doubly linked list sorted in ascending order, delete all duplicate nodes.
+
+#### Implementation Overview
+Since the list is sorted, all duplicate nodes will be adjacent. We can solve this by traversing the list and checking if the current node's data is the same as the next node's data.
+
+1.  Initialize a `current` pointer to the `head`.
+2.  Traverse the list as long as `current` and `current.next` are not `None`.
+3.  If `current.val == current.next.val`, a duplicate is found.
+    -   The node `current.next` needs to be deleted.
+    -   Store a reference to the node *after* the duplicate: `next_node = current.next.next`.
+    -   Bypass the duplicate node: `current.next = next_node`.
+    -   If `next_node` is not `None`, update its `prev` pointer to `current`.
+4.  If the data is not the same, no duplicate is found at this position, so just move to the next node: `current = current.next`.
+
+#### Python Code Snippet
+```python
+def remove_duplicates_sorted_dll(head: ListNode) -> ListNode:
+    if not head or not head.next:
+        return head
+
+    current = head
+    while current and current.next:
+        if current.val == current.next.val:
+            # Duplicate found, bypass the next node
+            duplicate_node = current.next
+            current.next = duplicate_node.next
+            if duplicate_node.next:
+                duplicate_node.next.prev = current
+            # The 'current' pointer stays in place to check for more duplicates (e.g., 1->1->1)
+        else:
+            # No duplicate, move to the next node
+            current = current.next
+
+    return head
+```
+
+---
+
+### 9. Add Two Numbers
+`[MEDIUM]` `#reversal` `#linked-list` `#math`
+
+#### Problem Statement
+You are given two non-empty linked lists representing two non-negative integers. The digits are stored in **reverse order**, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list. (This is the easier version). A harder version has digits stored in forward order.
+
+#### Implementation Overview (Reverse Order)
+Since the digits are already in reverse order (least significant digit first), we can iterate through both lists simultaneously.
+1.  **Initialize**: Create a dummy `head` for the result list and a `current` pointer. Initialize `carry = 0`.
+2.  **Iterate and Add**:
+    -   Loop as long as there are nodes in `l1`, `l2`, or there is a remaining `carry`.
+    -   Get the values from the current nodes of `l1` and `l2` (if a list is exhausted, its value is `0`).
+    -   Calculate `sum = val1 + val2 + carry`.
+    -   Update `carry = sum // 10`.
+    -   Create a new node with `sum % 10` and append it to the result list.
+3.  **Return Result**: The final sum list is `dummy_head.next`.
+
+#### Python Code Snippet
+```python
+def add_two_numbers(l1: ListNode, l2: ListNode) -> ListNode:
+    dummy_head = ListNode(0)
+    current = dummy_head
+    carry = 0
+
+    while l1 or l2 or carry:
+        val1 = l1.val if l1 else 0
+        val2 = l2.val if l2 else 0
+
+        sum_val = val1 + val2 + carry
+        carry = sum_val // 10
+        digit = sum_val % 10
+
+        current.next = ListNode(digit)
+        current = current.next
+
+        l1 = l1.next if l1 else None
+        l2 = l2.next if l2 else None
+
+    return dummy_head.next
+```
+
+---
+
+### 8. Add 1 to a Number Represented by LL
+`[MEDIUM]` `#reversal` `#linked-list` `#math`
+
+#### Problem Statement
+A non-negative integer is represented by a singly linked list of digits, where the head is the most significant digit. Add one to the number.
+
+#### Implementation Overview
+The main challenge is that addition starts from the least significant digit (the tail), but we only have access to the head. A common approach is to reverse the list.
+1.  **Reverse the List**: Reverse the linked list first. This makes the tail node the head, which is where addition begins.
+2.  **Add with Carry**:
+    -   Traverse the reversed list. Start with a `carry` of `1`.
+    -   For each node, calculate `sum = node.val + carry`.
+    -   Update the node's value: `node.val = sum % 10`.
+    -   Update the carry: `carry = sum // 10`. If `carry` becomes `0`, you can stop early.
+3.  **Handle Final Carry**: If after the loop there is still a `carry`, create a new node with the carry value and append it to the end of the reversed list.
+4.  **Reverse Back**: Reverse the list again to restore the original order.
+
+#### Python Code Snippet
+```python
+def add_one(head: ListNode) -> ListNode:
+    # 1. Reverse the list
+    head = reverse_list_iterative(head) # Assume reverse_list_iterative is defined
+
+    # 2. Add with carry
+    current = head
+    carry = 1
+    while current and carry > 0:
+        sum_val = current.val + carry
+        current.val = sum_val % 10
+        carry = sum_val // 10
+
+        # If no more carry, we can stop
+        if carry == 0:
+            break
+
+        # Move to next node, but handle final carry if it's the last node
+        if not current.next and carry > 0:
+            current.next = ListNode(carry)
+            carry = 0 # End loop
+
+        current = current.next
+
+    # 4. Reverse back
+    return reverse_list_iterative(head)
+```
+
+---
+
+### 7. Sort a LL of 0s, 1s and 2s
+`[MEDIUM]` `#rearrangement` `#linked-list`
+
+#### Problem Statement
+Given a linked list of `0`s, `1`s, and `2`s, sort it by modifying the links, not by swapping data.
+
+#### Implementation Overview
+This is similar to the Dutch National Flag problem for arrays. The idea is to create three separate lists for `0`s, `1`s, and `2`s, and then concatenate them.
+1.  **Create Dummy Heads**: Create three dummy nodes (`zero_head`, `one_head`, `two_head`) to serve as the starting points for the three new lists. This simplifies handling empty sublists.
+2.  **Create Tail Pointers**: Create three tail pointers (`zero_tail`, `one_tail`, `two_tail`) initialized to the dummy heads.
+3.  **Iterate and Segregate**: Traverse the original list. For each node, append it to the appropriate tail pointer based on its value and advance that tail pointer.
+4.  **Concatenate the Lists**:
+    -   Connect the `zero` list to the `one` list (or the `two` list if the `one` list is empty).
+    -   Connect the `one` list to the `two` list.
+5.  **Terminate the Final List**: Set the `next` of the final tail (`two_tail`) to `None`.
+6.  Return the head of the combined list, which is `zero_head.next`.
+
+#### Python Code Snippet
+```python
+def sort_list_of_012(head: ListNode) -> ListNode:
+    if not head or not head.next:
+        return head
+
+    zero_head = ListNode(0)
+    one_head = ListNode(0)
+    two_head = ListNode(0)
+    zero_tail, one_tail, two_tail = zero_head, one_head, two_head
+
+    curr = head
+    while curr:
+        if curr.val == 0:
+            zero_tail.next = curr
+            zero_tail = zero_tail.next
+        elif curr.val == 1:
+            one_tail.next = curr
+            one_tail = one_tail.next
+        else:
+            two_tail.next = curr
+            two_tail = two_tail.next
+        curr = curr.next
+
+    # Concatenate lists
+    one_tail.next = two_head.next
+    zero_tail.next = one_head.next if one_head.next else two_head.next
+    two_tail.next = None
+
+    return zero_head.next
+```
+```
 ```

@@ -194,4 +194,55 @@ class Solution:
             if not node1 or not node2 or node1.val != node2.val: return False
             return isMirror(node1.left, node2.right) and isMirror(node1.right, node2.left)
         return isMirror(root.left, root.right)
+
+---
+
+### 7. Check for Children Sum Property
+`[EASY]` `#recursion` `#properties`
+
+#### Problem Statement
+Given the root of a binary tree, check if the tree satisfies the "Children Sum Property". The property states that for every node in the tree, its value must be equal to the sum of the values of its left and right children. For a leaf node, this property is trivially true. If a child is null, its value is considered 0.
+
+**Example:**
+Input:
+```
+      10
+     /  \
+    8    2
+   / \  /
+  3  5 2
+```
+Output: `True` (10=8+2, 8=3+5, 2=2+0)
+
+#### Implementation Overview
+This can be solved with a straightforward recursive traversal. For each node, we check if it satisfies the property and then verify that its left and right subtrees also satisfy the property.
+
+1.  **Base Case:** If the current `node` is `null` or it is a leaf node, it trivially satisfies the property. Return `True`.
+2.  **Calculate Children Sum:** Get the values of the left and right children. If a child is `null`, treat its value as `0`.
+3.  **Check Current Node:** Compare `node.val` with the sum of its children's values.
+4.  **Recurse:** If the current node is valid, recursively call the function on its left and right children. The overall result is true only if the current node is valid AND both recursive calls return true.
+
+#### Python Code Snippet
+```python
+class Solution:
+    def isChildrenSum(self, root: TreeNode) -> bool:
+        if not root or (not root.left and not root.right):
+            return True
+
+        # Calculate sum of children's values
+        child_sum = 0
+        if root.left:
+            child_sum += root.left.val
+        if root.right:
+            child_sum += root.right.val
+
+        # Check current node and recurse
+        return (root.val == child_sum and
+                self.isChildrenSum(root.left) and
+                self.isChildrenSum(root.right))
+```
+
+#### Tricks/Gotchas
+- **Leaf Nodes:** Correctly identifying the base case for leaf nodes is important. A leaf node has no children to sum, so the property is considered true for it.
+- **Complete Traversal:** You must check the property for all nodes in the tree, not just the root. The recursion ensures this.
 ```

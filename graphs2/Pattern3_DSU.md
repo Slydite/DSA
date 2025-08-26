@@ -191,4 +191,105 @@ def largest_island(grid: list[list[int]]) -> int:
                 max_size = max(max_size, current_size)
 
     return max_size if max_size > 0 else n * n
+
+---
+
+### 5. Number of Islands II
+`[HARD]` `#dsu` `#dynamic-graph`
+
+#### Problem Statement
+You are given an `m x n` binary grid, initially filled with water. You are given a list of positions `positions` where land is added one by one. Return a list of the number of islands after each "add land" operation.
+
+#### DSU Logic
+This is a dynamic version of the classic "Number of Islands" problem, and DSU is perfect for it.
+- **Elements**: Grid cells, mapped from 2D to 1D.
+- **Sets**: Connected islands.
+- **`dsu.num_components`**: We will use the component counter from our DSU class.
+
+#### Algorithm
+1.  Initialize a DSU and a `grid` of zeros.
+2.  For each position `(r, c)` in `positions`:
+    a. If `grid[r][c]` is already land, the number of islands doesn't change. Add the current count to the results.
+    b. If it's water, turn it to land: `grid[r][c] = 1`.
+    c. **Crucially, the number of components in the DSU does not reflect the number of *islands*, just the number of water cells vs land cells. We need to track the island count manually.**
+    d. Initialize `island_count`. When a `0` becomes `1`, increment `island_count`.
+    e. Check its 4 neighbors. If a neighbor is land, perform a `union`.
+    f. If the `union` operation was successful (i.e., it merged two previously separate components), it means we connected two islands. Decrement `island_count`.
+    g. Append the current `island_count` to the results list.
+
+#### Python Code Snippet
+```python
+def num_islands_ii(m: int, n: int, positions: list[list[int]]) -> list[int]:
+    dsu = DSU(m * n)
+    grid = [[0] * n for _ in range(m)]
+    results = []
+    island_count = 0
+
+    for r, c in positions:
+        if grid[r][c] == 1:
+            results.append(island_count)
+            continue
+
+        grid[r][c] = 1
+        island_count += 1
+
+        pos_1d = r * n + c
+
+        for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            nr, nc = r + dr, c + dc
+            neighbor_1d = nr * n + nc
+
+            if 0 <= nr < m and 0 <= nc < n and grid[nr][nc] == 1:
+                # If union happens, it means we connected two separate islands
+                if dsu.union(pos_1d, neighbor_1d):
+                    island_count -= 1
+
+        results.append(island_count)
+
+    return results
+```
+
+---
+
+### 4. Most Stones Removed with Same Row or Column
+`[MEDIUM]` `#dsu` `#graph`
+
+#### Problem Statement
+On a 2D plane, you have `stones` at `(x, y)` coordinates. You can remove a stone if it shares either the same row or the same column with another stone that has not been removed. Return the largest number of stones that can be removed.
+
+#### DSU Logic
+- **Insight**: Stones that are connected (by sharing a row or column) form a "component". Within a component, all stones can be removed except for one. Therefore, the problem is to find `total_stones - number_of_components`.
+- **Elements**: We need to connect rows and columns. A clever trick is to map rows and columns to different number ranges in the DSU. For example, map row `r` to `r` and column `c` to `c + max_row_val`.
+- **Algorithm**:
+    1. Find the max row and column values to size the DSU array.
+    2. Initialize a DSU.
+    3. For each stone at `(r, c)`, `union` its row representation with its column representation.
+    4. After processing all stones, count the number of unique components (sets) that contain at least one stone.
+    5. The answer is `total_stones - num_components`.
+
+#### Python Code Snippet
+```python
+def remove_stones(stones: list[list[int]]) -> int:
+    if not stones: return 0
+
+    max_row = max(s[0] for s in stones)
+    max_col = max(s[1] for s in stones)
+    dsu = DSU(max_row + max_col + 2)
+
+    stone_nodes = set()
+    for r, c in stones:
+        row_node = r
+        col_node = c + max_row + 1
+        dsu.union(row_node, col_node)
+        stone_nodes.add(row_node)
+        stone_nodes.add(col_node)
+
+    num_components = 0
+    components = set()
+    for node in stone_nodes:
+        root = dsu.find(node)
+        components.add(root)
+
+    return len(stones) - len(components)
+```
 ```

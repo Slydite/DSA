@@ -199,6 +199,90 @@ def str_str(haystack: str, needle: str) -> int:
             return i
 
     return -1
+
+---
+
+### 7. Sum of Beauty of all Substrings
+`[MEDIUM]` `#substring` `#frequency`
+
+#### Problem Statement
+The beauty of a string is the difference between the frequency of the most frequent character and the least frequent character. Given a string `s`, return the sum of beauty of all of its substrings.
+
+#### Implementation Overview
+A brute-force approach that generates every substring and calculates its beauty is the most direct way to solve this.
+1.  **Outer Loop (Start of Substring)**: Iterate `i` from `0` to `n-1`.
+2.  **Inner Loop (End of Substring)**: Iterate `j` from `i` to `n-1` to generate all substrings starting at `i`.
+3.  **Calculate Beauty**:
+    -   For each substring `s[i...j]`, maintain a frequency map.
+    -   Update the frequency of `s[j]`.
+    -   Find the max and min frequency among characters in the current substring.
+    -   Add `max_freq - min_freq` to a running total.
+
+#### Python Code Snippet
+```python
+from collections import defaultdict
+
+def sum_of_beauty(s: str) -> int:
+    total_beauty = 0
+    n = len(s)
+
+    for i in range(n):
+        freq = defaultdict(int)
+        for j in range(i, n):
+            freq[s[j]] += 1
+
+            if len(freq) > 1:
+                max_f = 0
+                min_f = float('inf')
+                for char_code in freq:
+                    max_f = max(max_f, freq[char_code])
+                    min_f = min(min_f, freq[char_code])
+                total_beauty += (max_f - min_f)
+
+    return total_beauty
+```
+
+---
+
+### 6. Count Substrings with At Most K Distinct Characters
+`[MEDIUM]` `#sliding-window` `#substring`
+
+#### Problem Statement
+Given a string `s` and an integer `k`, count the number of substrings of `s` that contain at most `k` distinct characters.
+
+#### Implementation Overview
+This is a classic sliding window problem. The key insight is that if a window `s[left...right]` is valid (has at most `k` distinct characters), then every substring ending at `right` that starts at or after `left` is also valid. There are `right - left + 1` such substrings.
+
+1.  Initialize `left = 0`, `count = 0`, and a hash map `char_freq` to store character frequencies.
+2.  Expand the window by iterating with a `right` pointer.
+3.  While the number of distinct characters (`len(char_freq)`) is greater than `k`, shrink the window from the left.
+4.  After ensuring the window is valid, add `right - left + 1` to the total `count`.
+
+#### Python Code Snippet
+```python
+from collections import defaultdict
+
+def count_substrings_at_most_k(s: str, k: int) -> int:
+    if not s:
+        return 0
+
+    left = 0
+    count = 0
+    char_freq = defaultdict(int)
+
+    for right in range(len(s)):
+        char_freq[s[right]] += 1
+
+        while len(char_freq) > k:
+            char_freq[s[left]] -= 1
+            if char_freq[s[left]] == 0:
+                del char_freq[s[left]]
+            left += 1
+
+        count += (right - left + 1)
+
+    return count
+```
 ```
 
 #### Tricks/Gotchas

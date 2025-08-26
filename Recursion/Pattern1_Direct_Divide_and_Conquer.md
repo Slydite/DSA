@@ -240,4 +240,134 @@ def partition(nums: list[int], low: int, high: int) -> int:
 def sort_array(nums: list[int]) -> list[int]:
     quick_sort(nums, 0, len(nums) - 1)
     return nums
+
+---
+
+### 8. Sort a Stack using Recursion
+`[MEDIUM]` `#recursion` `#stack`
+
+#### Problem Statement
+Given a stack, sort it using only recursion and the standard stack operations (`push`, `pop`, `isEmpty`). You are not allowed to use any explicit loops.
+
+#### Implementation Overview
+The solution involves two recursive functions, demonstrating a powerful way to use the call stack for storage.
+1.  **`sortStack(stack)`:** The main function.
+    - **Base Case:** If the stack is empty, it's sorted.
+    - **Recursive Step:** Pop the top element (`temp`). Recursively call `sortStack` on the rest of the stack. After the smaller stack is sorted, insert `temp` back into its correct sorted position using a helper function.
+2.  **`sortedInsert(stack, element)`:** This helper inserts an element into a sorted stack.
+    - **Base Case:** If the stack is empty or the `element` is greater than the top, push `element`.
+    - **Recursive Step:** If `element` is smaller than the top, pop the top element (`top`), recursively call `sortedInsert`, and then push `top` back.
+
+#### Python Code Snippet
+```python
+def sort_stack(stack: list):
+    if not stack:
+        return
+
+    # Pop the top element
+    temp = stack.pop()
+
+    # Recursively sort the remaining stack
+    sort_stack(stack)
+
+    # Insert the popped element back in sorted order
+    sorted_insert(stack, temp)
+
+def sorted_insert(stack: list, element: int):
+    # Base case: if stack is empty or element is greater than top
+    if not stack or element > stack[-1]:
+        stack.append(element)
+        return
+
+    # Pop elements until we find the right spot
+    temp = stack.pop()
+    sorted_insert(stack, element)
+
+    # Push the popped elements back
+    stack.append(temp)
+```
+
+---
+
+### 7. Count Good Numbers
+`[MEDIUM]` `#recursion` `#modular-arithmetic`
+
+#### Problem Statement
+A digit string is "good" if digits at even indices are even (0, 2, 4, 6, 8) and digits at odd indices are prime (2, 3, 5, 7). Given `n`, return the total number of good digit strings of length `n`, modulo 10^9 + 7.
+
+#### Implementation Overview
+This is a combinatorial problem that requires modular exponentiation for an efficient solution.
+-   Number of choices for even indices: 5 (0, 2, 4, 6, 8)
+-   Number of choices for odd indices: 4 (2, 3, 5, 7)
+-   Number of even indices: `(n + 1) // 2`
+-   Number of odd indices: `n // 2`
+-   Total count = `(5 ^ num_even_indices) * (4 ^ num_odd_indices) % mod`.
+-   We must use a recursive function for modular exponentiation (similar to `Pow(x, n)`) to handle large `n`.
+
+#### Python Code Snippet
+```python
+def count_good_numbers(n: int) -> int:
+    MOD = 10**9 + 7
+
+    def power(base, exp):
+        if exp == 0:
+            return 1
+        half = power(base, exp // 2)
+        half_sq = (half * half) % MOD
+        if exp % 2 == 1:
+            return (base * half_sq) % MOD
+        else:
+            return half_sq
+
+    num_even_indices = (n + 1) // 2
+    num_odd_indices = n // 2
+
+    return (power(5, num_even_indices) * power(4, num_odd_indices)) % MOD
+```
+
+---
+
+### 6. Recursive Implementation of atoi()
+`[MEDIUM]` `#recursion` `#string-manipulation`
+
+#### Problem Statement
+Implement the `atoi()` function, which converts a string to an integer, handling whitespace, signs, and non-digit characters, while also checking for overflow. Implement the core logic recursively.
+
+#### Implementation Overview
+A recursive solution processes the string one character at a time. The main recursive function takes the current index, sign, and accumulated result as parameters.
+1.  **Base Case:** The recursion stops when the index reaches the end of the string or a non-digit character is found.
+2.  **Recursive Step:**
+    - The function is called with the next index (`index + 1`).
+    - The current character is converted to a digit.
+    - Before adding the digit, check for potential overflow.
+    - The digit is added to the accumulated result: `result = result * 10 + digit`.
+3.  **Initial Call:** A non-recursive wrapper handles leading whitespace and the sign.
+
+#### Python Code Snippet
+```python
+def myAtoi_recursive(s: str) -> int:
+    INT_MAX, INT_MIN = 2**31 - 1, -2**31
+
+    def solve(index, sign, result):
+        if index >= len(s) or not s[index].isdigit():
+            return sign * result
+
+        digit = int(s[index])
+
+        # Overflow check
+        if result > INT_MAX // 10 or (result == INT_MAX // 10 and digit > 7):
+            return INT_MAX if sign == 1 else INT_MIN
+
+        return solve(index + 1, sign, result * 10 + digit)
+
+    i, n = 0, len(s)
+    while i < n and s[i] == ' ': i += 1
+
+    sign = 1
+    if i < n and s[i] in ['+', '-']:
+        if s[i] == '-': sign = -1
+        i += 1
+
+    return solve(i, sign, 0)
+```
 ```
