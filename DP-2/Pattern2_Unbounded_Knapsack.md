@@ -1,6 +1,6 @@
 # Pattern 2: Unbounded Knapsack
 
-The Unbounded Knapsack pattern is a variation of the classic 0/1 Knapsack (or Subset Sum) problem. The key difference is that you can use each item an **unlimited** number of times. This seemingly small change has a significant impact on the recurrence relation and the way the DP table is filled. Problems in this category often involve finding an optimal value (max/min) or counting combinations for a target, given a set of items that can be reused.
+The Unbounded Knapsack pattern is a variation of 0/1 Knapsack. The key difference is that you can use each item an **unlimited** number of times. This changes the recurrence relation, as the choice for an item does not remove it from the set of future choices.
 
 ---
 
@@ -8,29 +8,81 @@ The Unbounded Knapsack pattern is a variation of the classic 0/1 Knapsack (or Su
 `[MEDIUM]` `#unbounded-knapsack`
 
 #### Problem Statement
-Given a list of items, each with a weight and a value, and a knapsack of a maximum weight capacity `W`, determine the maximum total value of items that can be put into the knapsack. You can use any item an unlimited number of times.
+Given items with weights and values, and a knapsack of capacity `W`, find the maximum value of items that can be put into the knapsack. You can use any item an unlimited number of times.
 
-*Example:* `W = 100`, `values = [10, 30, 20]`, `weights = [5, 10, 15]`. **Output:** `300` (10 items of weight 10 and value 30).
+#### Recurrence Relation
+Let `solve(index, capacity)` be the max value from items `0..index` with a given `capacity`.
+- **Choice 1 (Don't Pick):** If we don't pick `nums[index]`, the value is `solve(index - 1, capacity)`.
+- **Choice 2 (Pick):** If we pick `nums[index]`, the value is `values[index] + solve(index, capacity - weights[index])`. Note that we stay at the same `index` because we can pick the item again.
+- **`solve(index, capacity) = max(choice1, choice2)`**
 
-#### Implementation Overview
--   **DP State:** `dp[w]` = Maximum value achievable with a knapsack of capacity `w`.
--   **Recurrence Relation:** For each capacity `w` from 1 to `W`, we try to form that capacity using each available item.
-    `dp[w] = max(dp[w], value[i] + dp[w - weight[i]])` for each item `i`, provided `w >= weight[i]`.
--   **Space Optimization:** The standard solution uses a 1D DP array of size `(W + 1)`. The key difference from 0/1 knapsack is that the inner loop (or in this case, the single loop over capacity) processes weights in increasing order. This allows an item's value to be used multiple times to build up the solution for a given capacity.
-
-#### Python Code Snippet (1D DP)
+---
+#### a) Memoization (Top-Down)
 ```python
-def unbounded_knapsack(W: int, values: list[int], weights: list[int]) -> int:
+def unbounded_knapsack_memo(W, values, weights):
+    n = len(values)
+    dp = [[-1] * (W + 1) for _ in range(n)]
+
+    def solve(index, capacity):
+        if index == 0:
+            return (capacity // weights[0]) * values[0]
+        if dp[index][capacity] != -1:
+            return dp[index][capacity]
+
+        not_pick = solve(index - 1, capacity)
+        pick = -1
+        if weights[index] <= capacity:
+            pick = values[index] + solve(index, capacity - weights[index])
+
+        dp[index][capacity] = max(pick, not_pick)
+        return dp[index][capacity]
+
+    return solve(n - 1, W)
+```
+- **Time Complexity:** O(n * W).
+- **Space Complexity:** O(n * W) for DP table + O(n) for recursion stack.
+
+---
+#### b) Tabulation (Bottom-Up)
+```python
+def unbounded_knapsack_tab(W, values, weights):
+    n = len(values)
+    dp = [[0] * (W + 1) for _ in range(n)]
+
+    # Base case for the first item
+    for w in range(W + 1):
+        dp[0][w] = (w // weights[0]) * values[0]
+
+    for i in range(1, n):
+        for w in range(W + 1):
+            not_pick = dp[i-1][w]
+            pick = -1
+            if weights[i] <= w:
+                pick = values[i] + dp[i][w - weights[i]]
+            dp[i][w] = max(pick, not_pick)
+
+    return dp[n-1][W]
+```
+- **Time Complexity:** O(n * W).
+- **Space Complexity:** O(n * W).
+
+---
+#### c) Space Optimization (1D Array)
+The tabulation can be optimized to a single 1D array. The key difference from 0/1 knapsack is that the inner loop for `w` runs from left to right. This allows the current item `i` to be considered multiple times for a given capacity `w`.
+
+```python
+def unbounded_knapsack_optimized(W, values, weights):
     n = len(values)
     dp = [0] * (W + 1)
 
-    for w in range(1, W + 1):
-        for i in range(n):
-            if weights[i] <= w:
-                dp[w] = max(dp[w], values[i] + dp[w - weights[i]])
+    for i in range(n):
+        for w in range(weights[i], W + 1):
+            dp[w] = max(dp[w], values[i] + dp[w - weights[i]])
 
     return dp[W]
 ```
+- **Time Complexity:** O(n * W).
+- **Space Complexity:** O(W).
 
 ---
 
@@ -38,24 +90,44 @@ def unbounded_knapsack(W: int, values: list[int], weights: list[int]) -> int:
 `[MEDIUM]` `#unbounded-knapsack` `#coin-change`
 
 #### Problem Statement
-Given an array of distinct integer coins and a total `amount`, find the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1.
+Given coins of different denominations and a total `amount`, find the fewest coins needed to make up that amount. If impossible, return -1.
 
-*Example:* `coins = [1, 2, 5]`, `amount = 11`. **Output:** `3` (5 + 5 + 1).
+#### Recurrence Relation
+Let `dp[i]` be the min coins for amount `i`.
+- **`dp[i] = 1 + min(dp[i - coin])`** for every `coin` denomination.
+- **Base Case:** `dp[0] = 0`.
 
-#### Implementation Overview
-This is a classic unbounded knapsack problem where the items are coins, their "weight" is their denomination, their "value" is 1, and we want to minimize the total "value" (number of coins).
--   **DP State:** `dp[i]` = Minimum number of coins required to make a sum of `i`.
--   **Initialization:** `dp` array of size `(amount + 1)` with a large value (infinity). Set `dp[0] = 0`.
--   **Recurrence Relation:** For each amount `i` from 1 to `amount`:
-    `dp[i] = min(dp[i], 1 + dp[i - coin])` for each `coin` in the coin set, where `i >= coin`.
--   **Final Answer:** `dp[amount]`. If it's still infinity, the amount is unreachable.
-
-#### Python Code Snippet
+---
+#### a) Memoization (Top-Down)
 ```python
-def coin_change_min(coins: list[int], amount: int) -> int:
-    # dp[i] will be storing the minimum number of coins required for amount i
+def coin_change_min_memo(coins: list[int], amount: int) -> int:
+    dp = {}
+    def solve(rem_amount):
+        if rem_amount == 0: return 0
+        if rem_amount < 0: return float('inf')
+        if rem_amount in dp: return dp[rem_amount]
+
+        min_coins = float('inf')
+        for coin in coins:
+            res = solve(rem_amount - coin)
+            if res != float('inf'):
+                min_coins = min(min_coins, 1 + res)
+
+        dp[rem_amount] = min_coins
+        return min_coins
+
+    result = solve(amount)
+    return result if result != float('inf') else -1
+```
+- **Time Complexity:** O(amount * len(coins)).
+- **Space Complexity:** O(amount) for DP table + O(amount) for recursion stack.
+
+---
+#### b) Tabulation (Bottom-Up)
+```python
+def coin_change_min_tab(coins: list[int], amount: int) -> int:
     dp = [float('inf')] * (amount + 1)
-    dp[0] = 0 # Base case
+    dp[0] = 0
 
     for i in range(1, amount + 1):
         for coin in coins:
@@ -64,6 +136,8 @@ def coin_change_min(coins: list[int], amount: int) -> int:
 
     return dp[amount] if dp[amount] != float('inf') else -1
 ```
+- **Time Complexity:** O(amount * len(coins)).
+- **Space Complexity:** O(amount).
 
 ---
 
@@ -71,35 +145,30 @@ def coin_change_min(coins: list[int], amount: int) -> int:
 `[MEDIUM]` `#unbounded-knapsack` `#coin-change` `#count-combinations`
 
 #### Problem Statement
-Given an array of distinct integer coins and a total `amount`, find the number of **combinations** of coins that make up that amount.
+Given coins and an `amount`, find the number of **combinations** of coins that make up that amount.
 
-*Example:* `amount = 5`, `coins = [1, 2, 5]`. **Output:** `4`
-(Combinations: 5, 2+2+1, 2+1+1+1, 1+1+1+1+1)
+#### Recurrence Relation
+Let `dp[i]` = number of ways to make sum `i`. To avoid counting permutations, we process one coin at a time.
+- For each `coin`, we update the `dp` array: **`dp[j] = dp[j] + dp[j - coin]`**.
 
-#### Implementation Overview
-This variation focuses on counting combinations. The key is the order of loops to avoid counting permutations.
--   **DP State:** `dp[i]` = Number of ways to make a sum of `i`.
--   **Initialization:** `dp` array of size `(amount + 1)`. `dp[0] = 1` (one way to make sum 0: by choosing no coins).
--   **Recurrence Relation:** We iterate through the coins one by one. For each coin, we update the `dp` array for all amounts it can contribute to. This ensures we are only considering combinations.
-    ```
-    for coin in coins:
-        for i from coin to amount:
-            dp[i] = dp[i] + dp[i - coin]
-    ```
+---
+#### a) Tabulation (Bottom-Up)
+The tabulation approach is the most natural for this problem. The order of loops is crucial for counting combinations instead of permutations.
 
-#### Python Code Snippet
 ```python
-def coin_change_combinations(amount: int, coins: list[int]) -> int:
+def coin_change_combinations_tab(amount: int, coins: list[int]) -> int:
     dp = [0] * (amount + 1)
-    dp[0] = 1
+    dp[0] = 1 # Base case: one way to make sum 0 (by choosing no coins)
 
-    # Outer loop for coins ensures we count combinations, not permutations
+    # Outer loop for coins ensures we count combinations
     for coin in coins:
         for j in range(coin, amount + 1):
             dp[j] += dp[j - coin]
 
     return dp[amount]
 ```
+- **Time Complexity:** O(amount * len(coins)).
+- **Space Complexity:** O(amount).
 
 ---
 
@@ -107,34 +176,27 @@ def coin_change_combinations(amount: int, coins: list[int]) -> int:
 `[MEDIUM]` `#unbounded-knapsack`
 
 #### Problem Statement
-Given a rod of length `n` and an array of prices where `prices[i]` is the price of a piece of length `i+1`, determine the maximum value obtainable by cutting up the rod and selling the pieces.
-
-*Example:* `prices = [1, 5, 8, 9, 10, 17, 17, 20]` for lengths 1 to 8. `n = 8`.
-**Output:** `22` (by cutting into two pieces of length 2 and 6).
+Given a rod of length `n` and prices for pieces of different lengths, find the maximum value obtainable by cutting the rod.
 
 #### Implementation Overview
-This is a classic unbounded knapsack problem in disguise.
--   **Knapsack Analogy:**
-    -   The "knapsack capacity" is the total length of the rod, `n`.
-    -   The "items" are the different possible piece lengths (1, 2, ..., n).
-    -   The "weight" of an item is its length.
-    -   The "value" of an item is its price.
--   **DP State:** `dp[i]` = Maximum profit obtainable from a rod of length `i`.
--   **Recurrence Relation:** For each length `i`, we can make a cut of length `j` and add its price to the optimal solution for the remaining length `i-j`.
-    `dp[i] = max(price[j-1] + dp[i-j])` for all possible cut lengths `j` from 1 to `i`.
+This is an unbounded knapsack problem where rod length is capacity, piece lengths are weights, and prices are values.
+- **DP State:** `dp[i]` = max profit from a rod of length `i`.
+- **Recurrence:** `dp[i] = max(prices[j-1] + dp[i-j])` for all cut lengths `j` from 1 to `i`.
 
-#### Python Code Snippet
+---
+#### a) Tabulation (Bottom-Up)
 ```python
-def rod_cutting(prices: list[int], n: int) -> int:
-    # dp[i] will be the maximum price for a rod of length i
+def rod_cutting_tab(prices: list[int], n: int) -> int:
+    # Let lengths be 1-based for easier mapping
+    lengths = [i + 1 for i in range(len(prices))]
     dp = [0] * (n + 1)
 
     for i in range(1, n + 1):
-        max_val = 0
-        for j in range(1, i + 1):
-            # prices array is 0-indexed, so price of length j is at prices[j-1]
-            max_val = max(max_val, prices[j-1] + dp[i-j])
-        dp[i] = max_val
+        for j in range(len(lengths)):
+            if lengths[j] <= i:
+                dp[i] = max(dp[i], prices[j] + dp[i - lengths[j]])
 
     return dp[n]
 ```
+- **Time Complexity:** O(n * len(prices)).
+- **Space Complexity:** O(n).

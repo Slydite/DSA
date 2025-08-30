@@ -1,6 +1,17 @@
 # Pattern 5: DP on Stocks
 
-The "DP on Stocks" pattern is a series of problems that involve maximizing profit from buying and selling stocks under various constraints. While some of the simpler versions can be solved with a greedy approach, the DP framework is powerful because it can be systematically extended to handle more complex rules like transaction limits, cooldowns, and fees. The core idea is to define a state at each day `i` based on whether we are holding a stock or not.
+The "DP on Stocks" pattern is a series of problems that involve maximizing profit from buying and selling stocks under various constraints. The core idea is to define a state at each day `i` based on whether we are holding a stock or not (`can_buy`). This state can be extended to include transaction counts, cooldowns, etc.
+
+**General Recurrence Relation:**
+Let `solve(index, can_buy)` be the max profit from `index` onwards.
+- If `can_buy`:
+    - **Choice 1 (Buy):** `-prices[index] + solve(index + 1, cannot_buy)`
+    - **Choice 2 (Skip):** `0 + solve(index + 1, can_buy)`
+    - We take `max(Choice1, Choice2)`.
+- If `cannot_buy`:
+    - **Choice 1 (Sell):** `prices[index] + solve(index + 1, can_buy)` (plus any fees/cooldowns)
+    - **Choice 2 (Skip):** `0 + solve(index + 1, cannot_buy)`
+    - We take `max(Choice1, Choice2)`.
 
 ---
 
@@ -8,31 +19,23 @@ The "DP on Stocks" pattern is a series of problems that involve maximizing profi
 `[EASY]` `#dp-on-stocks` `#greedy`
 
 #### Problem Statement
-You are given an array `prices` where `prices[i]` is the price of a given stock on the `i`-th day. You want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock.
+Maximize profit with a **single transaction** (one buy, one sell).
 
-*Example:* `prices = [7,1,5,3,6,4]`. **Output:** `5` (Buy at 1, sell at 6).
+#### Implementation Overview
+While a simple greedy approach is most efficient (O(n) time, O(1) space), this problem can be framed with DP to show the foundational thinking. However, the greedy solution is standard and preferred.
 
-#### Implementation Overview (Greedy)
-The most efficient solution is a greedy one. We iterate through the prices, keeping track of the minimum price seen so far and the maximum profit we could have made.
-1.  Initialize `min_price = float('inf')` and `max_profit = 0`.
-2.  For each `price` in `prices`:
-    -   Update `min_price = min(min_price, price)`.
-    -   Calculate potential profit: `profit = price - min_price`.
-    -   Update `max_profit = max(max_profit, profit)`.
-3.  Return `max_profit`.
-
-#### Python Code Snippet (Greedy)
 ```python
+# Greedy Solution
 def max_profit_one_transaction(prices: list[int]) -> int:
     min_price = float('inf')
     max_profit = 0
     for price in prices:
-        if price < min_price:
-            min_price = price
-        elif price - min_price > max_profit:
-            max_profit = price - min_price
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
     return max_profit
 ```
+- **Time Complexity:** O(n).
+- **Space Complexity:** O(1).
 
 ---
 
@@ -40,25 +43,59 @@ def max_profit_one_transaction(prices: list[int]) -> int:
 `[MEDIUM]` `#dp-on-stocks` `#greedy`
 
 #### Problem Statement
-You are given an array `prices`. On each day, you can decide to buy and/or sell the stock. You can hold at most one share at any time, but you can buy and then immediately sell it on the same day. Find the maximum profit you can achieve (infinite transactions are allowed).
+Maximize profit with **infinite transactions**.
 
-*Example:* `prices = [7,1,5,3,6,4]`. **Output:** `7` (Buy at 1, sell at 5. Buy at 3, sell at 6. Profit = 4 + 3 = 7).
+#### Recurrence Relation
+`solve(index, can_buy)`:
+- `can_buy`: `max(-prices[index] + solve(index+1, 0), solve(index+1, 1))`
+- `!can_buy`: `max(prices[index] + solve(index+1, 1), solve(index+1, 0))`
 
-#### Implementation Overview (Greedy)
-The key insight is that the total profit is the sum of all positive price changes from one day to the next. A long upward trend `(p3 - p0)` is mathematically the same as the sum of its smaller parts `(p1-p0) + (p2-p1) + (p3-p2)`.
-1.  Initialize `total_profit = 0`.
-2.  Iterate from the second day (`i=1`).
-3.  If `prices[i] > prices[i-1]`, add the difference `prices[i] - prices[i-1]` to `total_profit`.
-
-#### Python Code Snippet (Greedy)
+---
+#### a) Memoization (Top-Down)
 ```python
-def max_profit_infinite_transactions(prices: list[int]) -> int:
-    total_profit = 0
-    for i in range(1, len(prices)):
-        if prices[i] > prices[i-1]:
-            total_profit += prices[i] - prices[i-1]
-    return total_profit
+def max_profit_infinite_memo(prices: list[int]) -> int:
+    n = len(prices)
+    dp = [[-1] * 2 for _ in range(n)]
+
+    def solve(index, can_buy):
+        if index == n: return 0
+        if dp[index][can_buy] != -1: return dp[index][can_buy]
+
+        if can_buy:
+            buy_profit = -prices[index] + solve(index + 1, 0)
+            skip_profit = solve(index + 1, 1)
+            dp[index][can_buy] = max(buy_profit, skip_profit)
+        else:
+            sell_profit = prices[index] + solve(index + 1, 1)
+            skip_profit = solve(index + 1, 0)
+            dp[index][can_buy] = max(sell_profit, skip_profit)
+
+        return dp[index][can_buy]
+
+    return solve(0, 1)
 ```
+- **Time Complexity:** O(n * 2) ~ O(n).
+- **Space Complexity:** O(n * 2) for DP table + O(n) for recursion stack.
+
+---
+#### b) Space Optimization
+```python
+def max_profit_infinite_optimized(prices: list[int]) -> int:
+    n = len(prices)
+    ahead_can_buy, ahead_cannot_buy = 0, 0
+
+    for i in range(n - 1, -1, -1):
+        # Current state depends on 'ahead' state
+        curr_can_buy = max(-prices[i] + ahead_cannot_buy, ahead_can_buy)
+        curr_cannot_buy = max(prices[i] + ahead_can_buy, ahead_cannot_buy)
+
+        ahead_can_buy = curr_can_buy
+        ahead_cannot_buy = curr_cannot_buy
+
+    return ahead_can_buy
+```
+- **Time Complexity:** O(n).
+- **Space Complexity:** O(1).
 
 ---
 
@@ -66,21 +103,45 @@ def max_profit_infinite_transactions(prices: list[int]) -> int:
 `[HARD]` `#dp-on-stocks`
 
 #### Problem Statement
-Find the maximum profit you can achieve. You may complete **at most two transactions**.
+Maximize profit with **at most two transactions**.
 
-*Example:* `prices = [3,3,5,0,0,3,1,4]`. **Output:** `6` (Buy at 0, sell at 3. Buy at 1, sell at 4).
+#### Recurrence Relation
+The state must now include the transaction count.
+`solve(index, can_buy, transactions_left)`
 
-#### Implementation Overview
-The state must now include the number of transactions. A very intuitive way to handle this is to track the state after each of the 4 possible actions: first buy, first sell, second buy, second sell.
--   `buy1`: Max profit after the first buy.
--   `sell1`: Max profit after the first sell.
--   `buy2`: Max profit after the second buy.
--   `sell2`: Max profit after the second sell.
-Iterate through prices and update these four variables.
+---
+#### a) Tabulation (Bottom-Up)
+A 3D DP table `dp[index][can_buy][transactions]` can be used. A more common and intuitive tabulation uses a 2D array `dp[k][day]` or tracks the 4 states (buy1, sell1, buy2, sell2).
 
-#### Python Code Snippet
 ```python
-def max_profit_two_transactions(prices: list[int]) -> int:
+def max_profit_two_transactions_tab(prices: list[int]) -> int:
+    n = len(prices)
+    # dp[day][transaction_state]
+    # States: 0:buy1, 1:sell1, 2:buy2, 3:sell2
+    dp = [[0] * 4 for _ in range(n)]
+
+    dp[0][0] = -prices[0] # buy1
+    dp[0][2] = -prices[0] # buy2
+
+    for i in range(1, n):
+        # State 0: First Buy
+        dp[i][0] = max(dp[i-1][0], -prices[i])
+        # State 1: First Sell
+        dp[i][1] = max(dp[i-1][1], dp[i-1][0] + prices[i])
+        # State 2: Second Buy
+        dp[i][2] = max(dp[i-1][2], dp[i-1][1] - prices[i])
+        # State 3: Second Sell
+        dp[i][3] = max(dp[i-1][3], dp[i-1][2] + prices[i])
+
+    return dp[n-1][3]
+```
+- **Time Complexity:** O(n * 4) ~ O(n).
+- **Space Complexity:** O(n * 4) ~ O(n).
+
+---
+#### b) Space Optimization
+```python
+def max_profit_two_transactions_optimized(prices: list[int]) -> int:
     buy1, sell1 = float('-inf'), 0
     buy2, sell2 = float('-inf'), 0
 
@@ -92,114 +153,123 @@ def max_profit_two_transactions(prices: list[int]) -> int:
 
     return sell2
 ```
+- **Time Complexity:** O(n).
+- **Space Complexity:** O(1).
 
 ---
 
-### 4. Best Time to Buy and Sell Stock IV
-`[HARD]` `#dp-on-stocks`
-
-#### Problem Statement
-Find the maximum profit you can achieve. You may complete **at most k transactions**.
-
-#### Implementation Overview
-This generalizes Part III. We can use a DP array of size `2k` to track the state after each buy and sell.
--   `dp[j]` with even `j` represents the max profit after the `j/2`-th sell.
--   `dp[j]` with odd `j` represents the max profit after the `(j+1)/2`-th buy.
--   **Optimization:** If `k >= n/2`, we can perform infinite transactions, so the problem reduces to Part II.
-
-#### Python Code Snippet
-```python
-def max_profit_k_transactions(k: int, prices: list[int]) -> int:
-    n = len(prices)
-    if n == 0 or k == 0:
-        return 0
-
-    # If k is large enough, it's the same as infinite transactions
-    if k >= n // 2:
-        total_profit = 0
-        for i in range(1, n):
-            if prices[i] > prices[i-1]:
-                total_profit += prices[i] - prices[i-1]
-        return total_profit
-
-    # dp[j] where j is even is a sell, odd is a buy
-    dp = [float('-inf')] * (2 * k)
-
-    for price in prices:
-        for j in range(0, 2 * k, 2):
-            # First buy
-            dp[j] = max(dp[j], -price)
-            # First sell
-            dp[j+1] = max(dp[j+1], dp[j] + price)
-            # Subsequent buys/sells
-            if j > 0:
-                dp[j] = max(dp[j], dp[j-1] - price)
-
-    return int(dp[-1]) if dp[-1] != float('-inf') else 0
-
-```
-
----
-
-### 5. Best Time to Buy and Sell Stock with Cooldown
+### 4. Best Time to Buy and Sell Stock with Cooldown
 `[MEDIUM]` `#dp-on-stocks` `#cooldown`
 
 #### Problem Statement
-You may complete as many transactions as you like, but you must observe a one-day cooldown period after you sell. You cannot buy on the day immediately following a sale.
+Maximize profit with infinite transactions, but with a one-day cooldown after selling.
 
-*Example:* `prices = [1,2,3,0,2]`. **Output:** `3` (Buy at 1, sell at 2. Buy at 0, sell at 2).
+#### Recurrence Relation
+`solve(index, can_buy)`:
+- `can_buy`: `max(-prices[index] + solve(index+1, 0), solve(index+1, 1))`
+- `!can_buy`: The sell choice now forces a cooldown. `max(prices[index] + solve(index+2, 1), solve(index+1, 0))`. `index+2` skips one day.
 
-#### Implementation Overview
-The state machine needs to track three states: holding a stock (`held`), having just sold (`sold`), and being able to buy (`rest`).
--   `held[i] = max(held[i-1], rest[i-1] - prices[i])`
--   `sold[i] = held[i-1] + prices[i]`
--   `rest[i] = max(rest[i-1], sold[i-1])`
-This can be space-optimized to O(1).
-
-#### Python Code Snippet (Space Optimized)
+---
+#### a) Memoization (Top-Down)
 ```python
-def max_profit_with_cooldown(prices: list[int]) -> int:
-    held_prev, sold_prev, rest_prev = float('-inf'), 0, 0
+def max_profit_cooldown_memo(prices: list[int]) -> int:
+    n = len(prices)
+    dp = [[-1] * 2 for _ in range(n)]
+
+    def solve(index, can_buy):
+        if index >= n: return 0
+        if dp[index][can_buy] != -1: return dp[index][can_buy]
+
+        if can_buy:
+            profit = max(-prices[index] + solve(index + 1, 0), solve(index + 1, 1))
+        else:
+            profit = max(prices[index] + solve(index + 2, 1), solve(index + 1, 0))
+
+        dp[index][can_buy] = profit
+        return profit
+
+    return solve(0, 1)
+```
+- **Time/Space Complexity:** O(n).
+
+---
+#### b) Space Optimization
+The state machine approach is cleanest here.
+- `held`: Max profit ending today holding a stock.
+- `sold`: Max profit ending today having just sold.
+- `rest`: Max profit ending today being able to buy.
+
+```python
+def max_profit_cooldown_optimized(prices: list[int]) -> int:
+    held, sold, rest = float('-inf'), 0, 0
 
     for price in prices:
-        held_curr = max(held_prev, rest_prev - price)
-        sold_curr = held_prev + price
-        rest_curr = max(rest_prev, sold_prev)
+        prev_sold = sold
+        # Profit if we sell today
+        sold = held + price
+        # Profit if we hold stock today
+        held = max(held, rest - price)
+        # Profit if we rest today
+        rest = max(rest, prev_sold)
 
-        held_prev, sold_prev, rest_prev = held_curr, sold_curr, rest_curr
-
-    return max(sold_prev, rest_prev)
+    return max(sold, rest)
 ```
+- **Time Complexity:** O(n).
+- **Space Complexity:** O(1).
 
 ---
 
-### 6. Best Time to Buy and Sell Stock with Transaction Fee
+### 5. Best Time to Buy and Sell Stock with Transaction Fee
 `[MEDIUM]` `#dp-on-stocks` `#fee`
 
 #### Problem Statement
-You may complete as many transactions as you like, but you need to pay a transaction fee for each complete transaction (one buy + one sell).
+Maximize profit with infinite transactions, but pay a transaction `fee` for each completed transaction.
 
-*Example:* `prices = [1,3,2,8,4,9]`, `fee = 2`. **Output:** `8`.
+#### Recurrence Relation
+`solve(index, can_buy)`:
+- `can_buy`: `max(-prices[index] + solve(index+1, 0), solve(index+1, 1))`
+- `!can_buy`: `max(prices[index] - fee + solve(index+1, 1), solve(index+1, 0))`. The fee is subtracted upon selling.
 
-#### Implementation Overview
-This is a small modification to the "infinite transactions" DP formulation.
--   **DP State:** `cash` (max profit holding no stock), `hold` (max profit holding one stock).
--   **Recurrence:** The fee can be applied either at buy or sell. Applying at sell is common.
-    -   `cash = max(cash, hold + price - fee)` (Sell and pay fee).
-    -   `hold = max(hold, cash - price)` (Buy).
-
-#### Python Code Snippet (Space Optimized)
+---
+#### a) Memoization (Top-Down)
 ```python
-def max_profit_with_fee(prices: list[int], fee: int) -> int:
-    cash = 0 # Max profit if we don't have a stock
-    hold = -prices[0] # Max profit if we do have a stock
+def max_profit_fee_memo(prices: list[int], fee: int) -> int:
+    n = len(prices)
+    dp = [[-1] * 2 for _ in range(n)]
 
-    for i in range(1, len(prices)):
-        # Today's cash is either yesterday's cash, or we sell today
-        prev_cash = cash
-        cash = max(cash, hold + prices[i] - fee)
-        # Today's hold is either yesterday's hold, or we buy today
-        hold = max(hold, prev_cash - prices[i])
+    def solve(index, can_buy):
+        if index == n: return 0
+        if dp[index][can_buy] != -1: return dp[index][can_buy]
 
-    return cash
+        if can_buy:
+            profit = max(-prices[index] + solve(index + 1, 0), solve(index + 1, 1))
+        else:
+            profit = max(prices[index] - fee + solve(index + 1, 1), solve(index + 1, 0))
+
+        dp[index][can_buy] = profit
+        return profit
+
+    return solve(0, 1)
 ```
+- **Time/Space Complexity:** O(n).
+
+---
+#### b) Space Optimization
+```python
+def max_profit_fee_optimized(prices: list[int], fee: int) -> int:
+    n = len(prices)
+    ahead_can_buy, ahead_cannot_buy = 0, 0
+
+    for i in range(n - 1, -1, -1):
+        # Max profit if I can buy today
+        curr_can_buy = max(-prices[i] + ahead_cannot_buy, ahead_can_buy)
+        # Max profit if I can sell today
+        curr_cannot_buy = max(prices[i] - fee + ahead_can_buy, ahead_cannot_buy)
+
+        ahead_can_buy = curr_can_buy
+        ahead_cannot_buy = curr_cannot_buy
+
+    return ahead_can_buy
+```
+- **Time Complexity:** O(n).
+- **Space Complexity:** O(1).

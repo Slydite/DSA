@@ -1,6 +1,6 @@
 # Pattern 6: Greedy Approach
 
-Sometimes, a problem that appears in a Dynamic Programming list can be solved more efficiently using a different technique. The following problem is a classic example of a case where a **Greedy Algorithm** provides the optimal solution. It's included here for completeness. The greedy approach involves making the locally optimal choice at each step with the hope of finding a global optimum.
+Sometimes, a problem that appears complex can be solved efficiently by making a series of locally optimal choices. This is the **Greedy** approach. While many problems that can be solved with DP can also be approached greedily, it's crucial to ensure the greedy choice property holds: that a locally optimal choice leads to a globally optimal solution. The problems here are classic examples where a greedy strategy is both correct and more efficient than a complex DP solution.
 
 ---
 
@@ -8,32 +8,20 @@ Sometimes, a problem that appears in a Dynamic Programming list can be solved mo
 `[EASY]` `#greedy` `#sorting`
 
 #### Problem Statement
-Assume you are an awesome parent and want to give your children some cookies. But, you should give each child at most one cookie.
+Each child `i` has a greed factor `g[i]`, and each cookie `j` has a size `s[j]`. A cookie `j` can be assigned to child `i` if `s[j] >= g[i]`. Maximize the number of content children.
 
-Each child `i` has a greed factor `g[i]`, which is the minimum size of a cookie that the child will be content with; and each cookie `j` has a size `s[j]`. If `s[j] >= g[i]`, we can assign the cookie `j` to the child `i`, and the child `i` will be content.
+#### Greedy Strategy
+The core intuition is to be as efficient as possible with our resources (the cookies). To satisfy the most children, we should use our "least valuable" cookies (the smallest ones) to satisfy the "easiest to please" children (the least greedy ones). This leaves larger cookies available for greedier children who need them.
 
-Your goal is to maximize the number of your content children and output the maximum number.
-
-*Example:* `g = [1,2]`, `s = [1,2,3]`. **Output:** `2` (Child 1 gets cookie 1, child 2 gets cookie 2).
-
-#### Implementation Overview
-This problem can be solved optimally with a greedy strategy. The core intuition is that to maximize the number of content children, we should try to satisfy the least greedy children with the smallest possible cookies that can satisfy them. This leaves larger cookies available for greedier children.
-
--   **Algorithm:**
-    1.  Sort the greed factor array `g` in ascending order.
-    2.  Sort the cookie size array `s` in ascending order.
-    3.  Initialize two pointers, one for the greed array (`child_idx`) and one for the cookie array (`cookie_idx`).
-    4.  Iterate while both pointers are within their array bounds:
-        -   If the current cookie `s[cookie_idx]` can satisfy the current child `g[child_idx]`, then we have a successful assignment. Increment the count of content children, and move on to the next child and the next cookie.
-        -   If the current cookie cannot satisfy the current child, it's too small. We must discard this cookie and try the next larger one for the *same* child. Increment only the cookie pointer.
--   **Final Answer:** The final count of content children, which will be equal to the `child_idx` pointer.
-
-This approach is O(N log N + M log M) dominated by the sorting steps.
+1.  **Sort** both the greed factor array `g` and the cookie size array `s`.
+2.  Use two pointers. Iterate through the children. For the current child, find the smallest available cookie that can satisfy them.
+3.  If we find such a cookie, we make the assignment (a "match") and move to the next child.
+4.  Whether we make a match or not, we always move on to the next cookie.
 
 #### Python Code Snippet
 ```python
 def find_content_children(g: list[int], s: list[int]) -> int:
-    # Sort both the greed factors and the cookie sizes
+    # Sort both arrays to enable the greedy approach
     g.sort()
     s.sort()
 
@@ -47,9 +35,55 @@ def find_content_children(g: list[int], s: list[int]) -> int:
             # Give the cookie and move to the next child
             child_idx += 1
 
-        # Always move to the next cookie, whether it was given away or not
+        # Always move to the next cookie to see if it can satisfy the
+        # current child (if they weren't satisfied) or the next child.
         cookie_idx += 1
 
     # The number of satisfied children is the number of times we incremented child_idx
     return child_idx
 ```
+- **Time Complexity:** O(N log N + M log M), dominated by the two sorting operations.
+- **Space Complexity:** O(1) if sorting is done in-place (or O(N+M) depending on sort implementation).
+
+---
+
+### 2. Jump Game
+`[MEDIUM]` `#greedy` `#array`
+
+#### Problem Statement
+You are given an integer array `nums`. You are initially positioned at the first index, and each element in the array represents your maximum jump length at that position. Return `true` if you can reach the last index, or `false` otherwise.
+
+*Example:* `nums = [2,3,1,1,4]`. **Output:** `true`.
+*Example:* `nums = [3,2,1,0,4]`. **Output:** `false`.
+
+#### Greedy Strategy
+Instead of thinking about which jump to take from the start (which can lead to a complex DP/backtracking solution), we can work backwards or, more simply, think greedily from the start. The greedy idea is to always find the **farthest reachable index**.
+
+1.  Initialize a variable `max_reach` to 0. This will track the farthest index we can possibly get to from the start.
+2.  Iterate through the array with an index `i` and value `num`.
+3.  **Constraint Check:** If at any point our current index `i` is greater than `max_reach`, it means we've fallen into a gap of zeros and can never reach the current index. Return `false`.
+4.  **Greedy Choice:** Update the farthest we can reach: `max_reach = max(max_reach, i + num)`.
+5.  If we successfully iterate through the entire array, it means every position was reachable. Return `true`.
+
+#### Python Code Snippet
+```python
+def can_jump(nums: list[int]) -> bool:
+    max_reach = 0
+    n = len(nums)
+
+    for i, num in enumerate(nums):
+        # If the current index is not reachable, we can't proceed
+        if i > max_reach:
+            return False
+
+        # Greedily update the farthest point we can reach
+        max_reach = max(max_reach, i + num)
+
+        # Optimization: if we can already reach the end, no need to check further
+        if max_reach >= n - 1:
+            return True
+
+    return True
+```
+- **Time Complexity:** O(n), because we iterate through the array once.
+- **Space Complexity:** O(1).
