@@ -54,10 +54,11 @@ def merge_intervals(intervals):
 
 #### Tricks/Gotchas
 - **Sorting is Key:** The entire greedy strategy depends on the intervals being sorted by their start points.
-- **In-place Merge:** The code snippet shows an in-place merge where the last element of the result list is modified.
+- **In-place Merge:** The code snippet shows an in-place merge where the last element of the result list is modified, which is an efficient approach.
 
 #### Related Problems
-- None in this list.
+- Insert Interval
+- Non-overlapping Intervals
 
 ---
 
@@ -81,8 +82,8 @@ A brute-force O(N^2) solution is trivial. The optimal O(N log N) solution uses a
     -   Recursively call on the right half to get `right_inversions`.
     -   Call a `merge_and_count_split` function that merges the two halves and counts the split inversions.
 3.  **Counting Split Inversions:** Inside the `merge` function, while comparing `left[i]` and `right[j]`:
-    -   If `left[i] <= right[j]`, there is no inversion. Place `left[i]` in the merged array and move to the next element in `left`.
-    -   If `left[i] > right[j]`, then `right[j]` is an inversion with *all* remaining elements in the `left` subarray (because `left` is sorted). The number of such inversions is `len(left) - i`. Add this to the split inversion count, place `right[j]` in the merged array, and move to the next element in `right`.
+    -   If `left[i] <= right[j]`, there is no inversion with `right[j]`. Place `left[i]` in the merged array and move to the next element in `left`.
+    -   If `left[i] > right[j]`, then `right[j]` is smaller than `left[i]` and all subsequent elements in the `left` subarray (because `left` is sorted). The number of such inversions is `len(left) - i`. Add this to the split inversion count, place `right[j]` in the merged array, and move to the next element in `right`.
 4.  The total count is `left_inversions + right_inversions + split_inversions`.
 
 #### Python Code Snippet
@@ -125,6 +126,7 @@ def count_inversions(arr):
 
 #### Tricks/Gotchas
 - **The Core Logic:** The most important part is realizing that when `left[i] > right[j]`, you have found `len(left) - i` inversions at once.
+- **Time Complexity:** The algorithm runs in O(N log N) time because it follows the structure of Merge Sort.
 
 #### Related Problems
 - 39. Reverse Pairs
@@ -149,8 +151,8 @@ This problem is very similar to Count Inversions and is also solved optimally wi
     -   Use two pointers, `i` for the left half and `j` for the right half.
     -   For each element `left[i]`, iterate `j` through the right half as long as `left[i] > 2 * right[j]`.
     -   The number of elements `j` has advanced gives the number of reverse pairs for that specific `left[i]`. Add this to the total count.
-    -   This counting loop can be optimized. As `i` increments, `j` does not need to be reset to 0, because `left[i+1] >= left[i]`, so any `j` that formed a pair with `left[i]` will also form one with `left[i+1]`.
-4.  **Merge:** After counting is complete for all elements in the left half, perform a standard merge of the two sorted halves to prepare the array for the next level of recursion.
+    -   This counting loop is optimized: As `i` increments, `j` does not need to be reset to 0, because `left[i+1] >= left[i]`, so any `j` that formed a pair with `left[i]` will also form one with `left[i+1]`.
+4.  **Merge:** After counting is complete, perform a standard merge of the two sorted halves to prepare the array for the next level of recursion.
 
 #### Python Code Snippet
 ```python
@@ -172,7 +174,7 @@ def reverse_pairs(nums):
                 j += 1
             count_split += j
 
-        # Merge halves
+        # Merge halves (standard merge logic)
         merged = []
         i, j = 0, 0
         while i < len(left) and j < len(right):
@@ -193,6 +195,7 @@ def reverse_pairs(nums):
 
 #### Tricks/Gotchas
 - **Count Before Merge:** The counting of reverse pairs must happen *before* the two halves are merged into a single sorted array, as the merge operation changes the element positions.
+- **Separate Loops:** It's cleaner and less error-prone to have one loop for counting pairs and a separate, standard loop for merging the arrays.
 
 #### Related Problems
 - 38. Count Inversions

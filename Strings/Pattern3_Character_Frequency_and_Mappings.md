@@ -1,35 +1,40 @@
+### `[PATTERN] Character Frequency and Mappings`
+
+This pattern is fundamental for solving a wide range of string problems. The core idea is to use a data structure, typically a **hash map** (or a simple array of size 26/128/256 if the character set is known and small), to store the frequencies of characters or to establish mappings between characters.
+
+This approach is highly efficient for:
+- Checking for anagrams.
+- Verifying isomorphic relationships.
+- Grouping or sorting strings based on their character composition.
+- Tracking the state of a sliding window.
+
 ---
 
 ### 1. Isomorphic Strings
-`[EASY]` `#string` `#hashmap` `#mapping`
+`[EASY]` `#hash-map` `#mapping`
 
 #### Problem Statement
-Given two strings `s` and `t`, determine if they are isomorphic. Two strings `s` and `t` are isomorphic if the characters in `s` can be replaced to get `t`. All occurrences of a character must be replaced with another character while preserving the order of characters. No two characters may map to the same character, but a character may map to itself.
-
-Example: `s = "egg"`, `t = "add"` are isomorphic. `s = "foo"`, `t = "bar"` are not.
+Given two strings `s` and `t`, determine if they are isomorphic. Two strings are isomorphic if the characters in `s` can be replaced to get `t`. All occurrences of a character must be replaced with the same character, and no two characters may map to the same target character.
 
 #### Implementation Overview
-The core of this problem is to track the character mappings from `s` to `t`. A hash map is perfect for this.
-1.  **Length Check**: If the strings have different lengths, they cannot be isomorphic.
-2.  **Initialize Mappings**: Create two hash maps:
-    -   `s_to_t_map`: To store mappings from characters in `s` to characters in `t`.
-    -   `t_to_s_map`: To ensure that no two characters from `s` map to the same character in `t`.
-3.  **Iterate and Check Mappings**: Traverse both strings from left to right using an index `i`.
-    -   Let `char_s = s[i]` and `char_t = t[i]`.
-    -   **Check `s -> t` mapping**:
-        -   If `char_s` is already in `s_to_t_map`, check if its mapping is `char_t`. If not, they are not isomorphic.
-        -   If `char_s` is not in the map, this is a new mapping.
-    -   **Check `t -> s` mapping**:
-        -   If `char_t` is already in `t_to_s_map`, check if its mapping is `char_s`. If not, it means a different character from `s` already maps to `char_t`, which is invalid.
-    -   **Create New Mapping**: If all checks pass for a new pair, add the mapping to both maps: `s_to_t_map[char_s] = char_t` and `t_to_s_map[char_t] = char_s`.
-4.  If the loop completes without returning `false`, the strings are isomorphic.
+To be isomorphic, the mapping from `s` to `t` must be **bijective** (one-to-one and onto).
+1.  A character in `s` must map to exactly one character in `t`.
+2.  A character in `t` must be mapped to by exactly one character in `s`.
+
+We can enforce this by using two hash maps.
+
+1.  **Length Check**: If `len(s) != len(t)`, they can't be isomorphic.
+2.  **Initialize Maps**: `s_to_t_map` and `t_to_s_map`.
+3.  **Iterate**: Loop through the strings using `zip`. For each pair `(char_s, char_t)`:
+    a. Check if `char_s` is already mapped to a different character in `t`.
+    b. Check if `char_t` is already mapped to by a different character in `s`.
+    c. If either check fails, return `False`.
+    d. Otherwise, establish the mapping in both directions.
+4.  If the loop completes, the mapping is valid. Return `True`.
 
 #### Python Code Snippet
 ```python
 def is_isomorphic(s: str, t: str) -> bool:
-    """
-    Determines if two strings are isomorphic.
-    """
     if len(s) != len(t):
         return False
 
@@ -37,121 +42,120 @@ def is_isomorphic(s: str, t: str) -> bool:
     t_to_s_map = {}
 
     for char_s, char_t in zip(s, t):
-        # Check forward and backward mappings
-        if (char_s in s_to_t_map and s_to_t_map[char_s] != char_t) or \
-           (char_t in t_to_s_map and t_to_s_map[char_t] != char_s):
+        # Check forward mapping (s -> t)
+        if char_s in s_to_t_map and s_to_t_map[char_s] != char_t:
+            return False
+        # Check backward mapping (t -> s)
+        if char_t in t_to_s_map and t_to_s_map[char_t] != char_s:
             return False
 
-        # Create the mapping
         s_to_t_map[char_s] = char_t
         t_to_s_map[char_t] = char_s
 
     return True
 ```
 
-#### Tricks/Gotchas
-- **Bidirectional Mapping**: It's not enough to just check the `s -> t` mapping. You must also ensure a character in `t` is not mapped to by multiple characters in `s`. Using a second map (or a set of used `t` characters) is crucial for this.
-- `zip()`: The `zip()` function in Python is a very clean way to iterate through two sequences in parallel.
-
-#### Related Problems
-- Check if two strings are anagram of each other
-
 ---
 
-### 2. Check if two strings are anagram of each other
-`[MEDIUM]` `[EASY]` `#string` `#hashmap` `#sorting`
+### 2. Valid Anagram
+`[EASY]` `#hash-map` `#sorting` `#frequency-counting`
 
 #### Problem Statement
-Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise. An anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
-
-Example: `s = "anagram"`, `t = "nagaram"` is true. `s = "rat"`, `t = "car"` is false.
+Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`. An anagram is formed by rearranging the letters of another word, using all original letters exactly once.
 
 #### Implementation Overview
-There are two primary approaches to solve this problem.
+**a) Frequency Counting (Optimal):** Anagrams must have identical character frequencies.
+1. Check for equal length.
+2. Use a hash map (or an array of size 26) to count character frequencies in `s`.
+3. Iterate through `t`, decrementing the count for each character. If a character is not in the map or its count is already zero, they are not anagrams.
 
-**Method 1: Sorting**
-1.  **Length Check**: If the lengths of `s` and `t` are different, they cannot be anagrams.
-2.  **Sort and Compare**: Convert both strings to character arrays, sort them, and then compare the sorted arrays. If they are identical, the strings are anagrams.
+**b) Sorting:** If two strings are anagrams, their sorted versions will be identical. This is often simpler to write but less performant (O(N log N)).
 
-**Method 2: Character Frequency Count (HashMap)**
-This method is generally more efficient as sorting takes `O(N log N)`.
-1.  **Length Check**: Same as above.
-2.  **Count Frequencies**: Create a hash map (or an array of size 26 for lowercase English letters) to store the frequency of each character in the first string, `s`.
-3.  **Decrement Frequencies**: Iterate through the second string, `t`. For each character, decrement its count in the hash map.
-4.  **Check for Negatives**: If at any point a character's count in the map becomes negative (or you encounter a character not in the map), it means `t` has more of that character than `s`, so they are not anagrams.
-5.  **Final Check**: After the loop, if all counts in the map are zero, the strings are anagrams.
-
-#### Python Code Snippet (Frequency Count Method)
+#### Python Code Snippet (Frequency Counting)
 ```python
 from collections import Counter
 
 def is_anagram(s: str, t: str) -> bool:
-    """
-    Checks if two strings are anagrams using a frequency counter.
-    """
     if len(s) != len(t):
         return False
-
-    # The Counter object creates a hash map of character frequencies.
-    # Comparing two Counter objects checks for equality of keys and values.
+    # Counter creates a hash map of frequencies.
+    # Comparing two Counter objects is a clean way to check for equality.
     return Counter(s) == Counter(t)
 
-# Sorting method for comparison
-def is_anagram_sorting(s: str, t: str) -> bool:
+# Alternative: Manual frequency counting
+def is_anagram_manual(s: str, t: str) -> bool:
     if len(s) != len(t):
         return False
-    return sorted(s) == sorted(t)
+
+    counts = {}
+    for char in s:
+        counts[char] = counts.get(char, 0) + 1
+
+    for char in t:
+        if counts.get(char, 0) == 0:
+            return False
+        counts[char] -= 1
+
+    return True
 ```
-
-#### Tricks/Gotchas
-- **Unicode vs. ASCII**: If the strings can contain Unicode characters, a hash map is more robust than a fixed-size array for frequency counting.
-- **Efficiency**: The frequency counting method is typically `O(N)` time and `O(k)` space (where `k` is the number of unique characters, or constant for ASCII), which is better than the `O(N log N)` time complexity of the sorting approach.
-
-#### Related Problems
-- Isomorphic Strings
-- Group Anagrams (a more advanced version)
 
 ---
 
-### 3. Sort Characters by Frequency
-`[EASY]` `#string` `#hashmap` `#sorting` `#frequency`
+### 3. Group Anagrams
+`[MEDIUM]` `#hash-map` `#grouping`
 
 #### Problem Statement
-Given a string `s`, sort it in decreasing order based on the frequency of its characters. The frequency of a character is the number of times it appears in the string. If two characters have the same frequency, their relative order doesn't matter.
-
-Example: `s = "tree"` -> `"eert"` or `"eetr"`. `s = "cccaaa"` -> `"cccaaa"` or `"aaaccc"`.
+Given an array of strings `strs`, group the anagrams together. You can return the answer in any order.
 
 #### Implementation Overview
-This problem requires counting character frequencies and then sorting based on those frequencies.
+The core idea is to find a **canonical representation** for each anagram group. All strings in an anagram group will have the same canonical form. We can use a hash map where the key is this canonical form and the value is a list of strings belonging to that group.
 
-1.  **Count Frequencies**: Use a hash map (like `collections.Counter` in Python) to count the frequency of each character in the input string `s`.
-2.  **Sort by Frequency**: Sort the characters based on their frequencies in descending order. A common way to do this is to get the items from the frequency map and use a custom sorting key.
-3.  **Build the Result String**: Iterate through the sorted characters. For each character, append it to the result string a number of times equal to its frequency.
+Two common choices for the canonical key:
+1.  **Sorted String**: Sort the characters of the string (e.g., "eat", "tea", "ate" all become "aet").
+2.  **Character Count Tuple**: Create a frequency array (e.g., of size 26) for each string and convert it to a tuple, which is hashable and can be used as a dictionary key.
 
-#### Python Code Snippet
+#### Python Code Snippet (Sorted String Key)
+```python
+import collections
+
+def group_anagrams(strs: list[str]) -> list[list[str]]:
+    # A dictionary where keys are the canonical form (sorted string)
+    # and values are lists of anagrams.
+    anagram_groups = collections.defaultdict(list)
+
+    for s in strs:
+        # The sorted string is the key
+        key = "".join(sorted(s))
+        anagram_groups[key].append(s)
+
+    return list(anagram_groups.values())
+```
+
+---
+
+### 4. Sort Characters by Frequency
+`[MEDIUM]` `#hash-map` `#sorting` `#frequency-counting`
+
+#### Problem Statement
+Given a string `s`, sort it in decreasing order based on the frequency of its characters.
+
+#### Implementation Overview
+This combines frequency counting with a custom sort.
+1.  **Count Frequencies**: Use a hash map (`collections.Counter`) to get the frequency of each character.
+2.  **Sort by Frequency**: Sort the characters based on their frequencies in descending order.
+3.  **Build Result**: Create the final string by appending each character a number of times equal to its frequency.
+
+A **Bucket Sort** approach is often more efficient (O(N) time).
+1. Count frequencies.
+2. Create `n+1` buckets (arrays/lists).
+3. For each character with frequency `f`, add it to `buckets[f]`.
+4. Build the result string by iterating through the buckets from `n` down to `1`.
+
+#### Python Code Snippet (Bucket Sort)
 ```python
 from collections import Counter
 
 def frequency_sort(s: str) -> str:
-    """
-    Sorts a string in decreasing order based on character frequency.
-    """
-    # 1. Count character frequencies
-    counts = Counter(s)
-
-    # 2. Sort characters by frequency in descending order
-    # The key for sorting is the frequency (x[1])
-    sorted_chars = sorted(counts.items(), key=lambda item: item[1], reverse=True)
-
-    # 3. Build the result string
-    result = []
-    for char, freq in sorted_chars:
-        result.append(char * freq)
-
-    return "".join(result)
-
-# Alternative using a Bucket Sort-like approach (often more efficient)
-def frequency_sort_bucket(s: str) -> str:
     counts = Counter(s)
     max_freq = max(counts.values(), default=0)
 
@@ -169,9 +173,60 @@ def frequency_sort_bucket(s: str) -> str:
     return "".join(result)
 ```
 
-#### Tricks/Gotchas
-- **Sorting Stability**: The problem statement says the order of characters with the same frequency doesn't matter, so a stable sort is not required.
-- **Bucket Sort**: For a string of length `n`, bucket sort can be more efficient than a general-purpose sort. The time complexity is O(n) because the number of frequencies and characters is tied to `n`, avoiding the O(k log k) for sorting `k` unique characters.
+---
 
-#### Related Problems
-- Check if two strings are anagram of each other
+### 5. Find All Anagrams in a String
+`[MEDIUM]` `#sliding-window` `#hash-map`
+
+#### Problem Statement
+Given two strings `s` and `p`, return an array of all the start indices of `p`'s anagrams in `s`.
+
+#### Implementation Overview
+This is a perfect blend of the Sliding Window and Frequency Map patterns. We slide a window of size `len(p)` across `s` and, at each step, check if the window's character frequencies match the frequencies of `p`.
+
+1.  **Setup**: Get frequency maps for the pattern `p` (`p_counts`) and for the initial window in `s` (`s_counts`).
+2.  **Initial Check**: Compare the initial `p_counts` and `s_counts`. If they match, index 0 is a solution.
+3.  **Slide the Window**: Iterate from `len(p)` to the end of `s`.
+    a. **Expand**: Add the new character `s[right]` to the window by incrementing its count in `s_counts`.
+    b. **Shrink**: Remove the character `s[left]` that just left the window by decrementing its count. If its count becomes 0, remove it from the map.
+    c. **Compare**: After each slide, compare `s_counts` with `p_counts`. If they are equal, the current `left` index marks the start of an anagram.
+
+#### Python Code Snippet
+```python
+from collections import Counter
+
+def find_anagrams(s: str, p: str) -> list[int]:
+    ns, np = len(s), len(p)
+    if ns < np:
+        return []
+
+    p_counts = Counter(p)
+    s_counts = Counter()
+
+    result = []
+
+    # Initialize the first window
+    for i in range(np):
+        s_counts[s[i]] += 1
+
+    if s_counts == p_counts:
+        result.append(0)
+
+    # Slide the window across the rest of the string
+    for i in range(np, ns):
+        # Add the new character (at right of window)
+        s_counts[s[i]] += 1
+
+        # Remove the old character (at left of window)
+        left_char = s[i - np]
+        if s_counts[left_char] == 1:
+            del s_counts[left_char]
+        else:
+            s_counts[left_char] -= 1
+
+        # Compare and add result
+        if s_counts == p_counts:
+            result.append(i - np + 1)
+
+    return result
+```

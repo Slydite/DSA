@@ -30,51 +30,34 @@ How we store a graph in memory is crucial for performance. The two most common m
     - A 2D array of size `V x V` where `V` is the number of vertices.
     - `matrix[i][j] = 1` (or a weight) if there is an edge from vertex `i` to `j`. Otherwise, `0`.
     - **Pros:** Fast to check for an edge between two vertices (O(1)).
-    - **Cons:** Uses O(V^2) space, which is inefficient for **sparse graphs** (graphs with few edges).
+    - **Cons:** Uses O(V^2) space, which is inefficient for **sparse graphs**.
 
 2.  **Adjacency List:**
     - An array of lists. The size of the array is `V`.
     - `adj[i]` contains a list of all vertices that are adjacent to vertex `i`.
-    - **Pros:** Space-efficient for sparse graphs (O(V + E) where E is the number of edges). Easy to iterate over all neighbors of a vertex.
+    - **Pros:** Space-efficient for sparse graphs (O(V + E)). Easy to iterate over all neighbors.
     - **Cons:** Slower to check for a specific edge `(u, v)` (O(degree(u))).
 
-**Adjacency List is the most common representation in competitive programming and interviews.**
+**Adjacency List is the most common representation in interviews.**
 
-#### C++ Code Snippet (Adjacency List)
-```cpp
-#include <iostream>
-#include <vector>
+#### Python Code Snippet (Adjacency List)
+```python
+from collections import defaultdict
 
-// For an undirected graph
-void addEdge(std::vector<int> adj[], int u, int v) {
-    adj[u].push_back(v);
-    adj[v].push_back(u);
-}
-```
+class Graph:
+    def __init__(self, vertices):
+        self.V = vertices
+        # Using a defaultdict to represent the adjacency list
+        self.adj = defaultdict(list)
 
-#### Java Code Snippet (Adjacency List)
-```java
-import java.util.ArrayList;
-import java.util.List;
+    # For an undirected graph
+    def add_edge(self, u, v):
+        self.adj[u].append(v)
+        self.adj[v].append(u)
 
-class Graph {
-    private int V;
-    private List<List<Integer>> adj;
-
-    Graph(int v) {
-        V = v;
-        adj = new ArrayList<>(V);
-        for (int i = 0; i < V; ++i) {
-            adj.add(new ArrayList<>());
-        }
-    }
-
-    // For an undirected graph
-    void addEdge(int u, int v) {
-        adj.get(u).add(v);
-        adj.get(v).add(u);
-    }
-}
+    # For a directed graph
+    def add_edge_directed(self, u, v):
+        self.adj[u].append(v)
 ```
 
 ---
@@ -82,35 +65,87 @@ class Graph {
 ### 3. Breadth-First Search (BFS)
 `[MEDIUM]` `[FUNDAMENTAL]` `#traversal` `#queue`
 
+#### Problem Statement
+Given a graph and a starting vertex, traverse the graph level by level from the starting vertex. Return a list of all vertices in the order they were visited.
+
+*Example:* A graph with edges `(0,1), (0,2), (1,2), (2,3)`. Start at vertex 0.
+**Output:** `[0, 1, 2, 3]`
+
 #### Implementation Overview
 BFS explores a graph level by level, using a **queue** to manage the order of nodes to visit. It's ideal for finding the shortest path in an unweighted graph.
-1.  Create a `visited` array/set to avoid cycles and redundant processing.
-2.  Create a queue and add the starting `source` vertex to it. Mark the `source` as visited.
+1.  Create a `visited` array/set to avoid cycles.
+2.  Create a queue and add the starting `source` vertex. Mark `source` as visited.
 3.  While the queue is not empty:
-    - Dequeue a vertex `u`.
+    - Dequeue a vertex `u`. Add it to the result list.
     - For every neighbor `v` of `u`:
         - If `v` has not been visited, mark it as visited and enqueue it.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def bfs_traversal(adj: dict, start_node: int, num_nodes: int) -> list[int]:
+    visited = [False] * num_nodes
+    q = deque([start_node])
+    visited[start_node] = True
+    traversal_order = []
+
+    while q:
+        u = q.popleft()
+        traversal_order.append(u)
+
+        for v in adj.get(u, []):
+            if not visited[v]:
+                visited[v] = True
+                q.append(v)
+
+    return traversal_order
+```
 
 ---
 
 ### 4. Depth-First Search (DFS)
 `[MEDIUM]` `[FUNDAMENTAL]` `#traversal` `#stack` `#recursion`
 
+#### Problem Statement
+Given a graph and a starting vertex, traverse the graph by exploring as far as possible along each branch before backtracking. Return a list of all vertices in the order they were visited.
+
+*Example:* A graph with edges `(0,1), (0,2), (1,2), (2,3)`. Start at vertex 0.
+**Output:** `[0, 1, 2, 3]`
+
 #### Implementation Overview
-DFS explores a graph by going as deep as possible down one path before backtracking. It's typically implemented with **recursion** (which uses the call stack).
+DFS is typically implemented with **recursion** (which uses the call stack).
 1.  Create a `visited` array/set.
-2.  Define a recursive function `dfs(u)`:
-    - Mark the current vertex `u` as visited.
+2.  Define a recursive function `dfs(u, visited, result)`:
+    - Mark the current vertex `u` as visited and add it to the `result`.
     - For every neighbor `v` of `u`:
-        - If `v` has not been visited, recursively call `dfs(v)`.
+        - If `v` has not been visited, recursively call `dfs(v, ...)`.
+
+#### Python Code Snippet
+```python
+def dfs_traversal(adj: dict, start_node: int, num_nodes: int) -> list[int]:
+    visited = [False] * num_nodes
+    traversal_order = []
+
+    def dfs(u):
+        visited[u] = True
+        traversal_order.append(u)
+        for v in adj.get(u, []):
+            if not visited[v]:
+                dfs(v)
+
+    dfs(start_node)
+    return traversal_order
+```
 
 ---
 
-### 5. Connected Components | Logic Explanation
+### 5. Number of Connected Components
 `[MEDIUM]` `#traversal` `#bfs` `#dfs`
 
 #### Problem Statement
-In an undirected graph, find and count the number of disconnected subgraphs (components).
+Given an undirected graph, find and count the number of disconnected subgraphs (components).
+
+*Example:* `V = 5`, `edges = [[0,1], [1,2], [3,4]]`. **Output:** `2`.
 
 #### Implementation Overview
 This is a direct application of BFS or DFS to count the number of times we have to start a new traversal.
@@ -122,3 +157,28 @@ This is a direct application of BFS or DFS to count the number of times we have 
         - Increment `component_count`.
         - Start a traversal (either BFS or DFS) from vertex `i`. The traversal will automatically visit every node in the current component and mark them as visited.
 4.  The final `component_count` is the answer.
+
+#### Python Code Snippet
+```python
+def count_components(n: int, edges: list[list[int]]) -> int:
+    adj = {i: [] for i in range(n)}
+    for u, v in edges:
+        adj[u].append(v)
+        adj[v].append(u)
+
+    visited = [False] * n
+    component_count = 0
+
+    def dfs(u):
+        visited[u] = True
+        for v in adj[u]:
+            if not visited[v]:
+                dfs(v)
+
+    for i in range(n):
+        if not visited[i]:
+            component_count += 1
+            dfs(i)
+
+    return component_count
+```

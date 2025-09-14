@@ -2,7 +2,7 @@
 
 A Topological Sort of a Directed Acyclic Graph (DAG) is a linear ordering of its vertices such that for every directed edge from vertex `u` to vertex `v`, `u` comes before `v` in the ordering. If the graph has a cycle, it does not have a topological sort. This pattern is fundamental for problems involving dependencies, scheduling, or prerequisites.
 
-There are two main algorithms to perform a topological sort: a DFS-based approach and a BFS-based approach (Kahn's Algorithm).
+There are two main algorithms: a DFS-based approach and a BFS-based approach (Kahn's Algorithm).
 
 ---
 
@@ -10,22 +10,23 @@ There are two main algorithms to perform a topological sort: a DFS-based approac
 `[MEDIUM]` `#dfs` `#topological-sort`
 
 #### Problem Statement
-Given a Directed Acyclic Graph (DAG), return a linear ordering of its vertices that represents a valid topological sort.
+Given a Directed Acyclic Graph (DAG) with `V` vertices and `E` edges, find any valid topological sort of the graph.
+
+*Example:* `V = 4`, `edges = [[1,0],[2,0],[3,1],[3,2]]`. **Output:** `[3, 2, 1, 0]` or `[3, 1, 2, 0]`.
 
 #### Implementation Overview
-This approach uses Depth-First Search and a stack to record the "finish time" of each node.
-1.  Initialize an empty `stack` which will store the sorted vertices.
-2.  Initialize a `visited` array.
-3.  Iterate through all vertices. For each unvisited vertex, call a recursive DFS helper.
-4.  **`dfs(node)` function**:
+This approach uses DFS and a stack to record the "finish time" of each node. A node is "finished" after all its descendants have been visited.
+1.  Initialize an empty `stack` and a `visited` array.
+2.  Iterate through all vertices. For each unvisited vertex, call a recursive DFS helper.
+3.  **`dfs(node)` function**:
     - Mark `node` as visited.
     - For each `neighbor` of `node`, if it's not visited, recursively call `dfs(neighbor)`.
     - After the recursive calls for all neighbors are complete, push the `node` onto the `stack`.
-5.  The `stack` now contains the vertices in topologically sorted order. Popping from it gives the result.
+4.  The `stack`, when popped, gives the vertices in topologically sorted order.
 
 #### Python Code Snippet
 ```python
-def topo_sort_dfs(V, adj):
+def topo_sort_dfs(V: int, adj: dict) -> list[int]:
     visited = [False] * V
     stack = []
 
@@ -40,7 +41,7 @@ def topo_sort_dfs(V, adj):
         if not visited[i]:
             dfs(i)
 
-    return stack[::-1] # Reverse to get correct order
+    return stack[::-1] # Reverse the stack to get the correct order
 ```
 
 ---
@@ -49,20 +50,44 @@ def topo_sort_dfs(V, adj):
 `[MEDIUM]` `#bfs` `#topological-sort`
 
 #### Problem Statement
-Given a Directed Acyclic Graph (DAG), return a valid topological sort. This approach also naturally detects cycles.
+Given a DAG, find a valid topological sort. This approach also naturally detects cycles.
 
 #### Implementation Overview
-Kahn's algorithm uses Breadth-First Search and **in-degrees** (the number of incoming edges).
-1.  **Compute In-degrees**: Calculate the in-degree for every vertex.
-2.  **Initialize Queue**: Create a queue and add all vertices with an in-degree of `0`.
+Kahn's algorithm uses BFS and **in-degrees** (the number of incoming edges).
+1.  **Compute In-degrees**: Create an array `in_degree` of size `V` and calculate the in-degree for every vertex by iterating through the adjacency list.
+2.  **Initialize Queue**: Create a queue and add all vertices with an in-degree of `0`. These are the starting points with no prerequisites.
 3.  **Process Queue**:
-    - Initialize an empty list `topo_order`.
-    - While the queue is not empty:
-        - Dequeue `u`, add it to `topo_order`.
-        - For each `neighbor` `v` of `u`:
-            - Decrement the in-degree of `v`.
-            - If `v`'s in-degree becomes `0`, enqueue `v`.
-4.  **Cycle Detection**: If `len(topo_order) == V`, the sort is valid. Otherwise, a cycle exists. This directly solves **Cycle Detection in Directed Graph (BFS)**.
+    - While the queue is not empty, dequeue `u`, add it to the `topo_order` list.
+    - For each `neighbor` `v` of `u`, decrement its in-degree.
+    - If a neighbor's in-degree becomes `0`, it means all its prerequisites are met, so enqueue it.
+4.  **Cycle Detection**: If `len(topo_order) == V`, the sort is valid. Otherwise, a cycle exists.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def topo_sort_kahns(V: int, adj: dict) -> list[int]:
+    in_degree = [0] * V
+    for i in range(V):
+        for neighbor in adj.get(i, []):
+            in_degree[neighbor] += 1
+
+    q = deque([i for i in range(V) if in_degree[i] == 0])
+    topo_order = []
+
+    while q:
+        u = q.popleft()
+        topo_order.append(u)
+
+        for v in adj.get(u, []):
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                q.append(v)
+
+    if len(topo_order) == V:
+        return topo_order
+    else:
+        return [] # Cycle detected
+```
 
 ---
 
@@ -72,10 +97,35 @@ Kahn's algorithm uses Breadth-First Search and **in-degrees** (the number of inc
 #### Problem Statement
 Given `numCourses` and a list of `prerequisites` `[ai, bi]` (to take `ai`, you must first take `bi`), return `true` if you can finish all courses.
 
+*Example:* `numCourses = 2`, `prerequisites = [[1,0]]`. **Output:** `true`.
+
 #### Implementation Overview
-This is a cycle detection problem. If there is a cycle (e.g., A depends on B, B depends on A), it's impossible.
+This is a cycle detection problem. If there is a cycle, it's impossible.
 - **Graph Model**: Each course is a vertex. A prerequisite `[a, b]` is a directed edge `b -> a`.
-- **Solution**: Use Kahn's algorithm. If the algorithm produces a topological sort of length `numCourses`, it means there was no cycle. Return `true`. Otherwise, return `false`.
+- **Solution**: Use Kahn's algorithm. If the algorithm produces a topological sort of length `numCourses`, there was no cycle.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def can_finish(numCourses: int, prerequisites: list[list[int]]) -> bool:
+    adj = {i: [] for i in range(numCourses)}
+    in_degree = [0] * numCourses
+    for course, prereq in prerequisites:
+        adj[prereq].append(course)
+        in_degree[course] += 1
+
+    q = deque([i for i in range(numCourses) if in_degree[i] == 0])
+    count = 0
+    while q:
+        u = q.popleft()
+        count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                q.append(v)
+
+    return count == numCourses
+```
 
 ---
 
@@ -85,11 +135,34 @@ This is a cycle detection problem. If there is a cycle (e.g., A depends on B, B 
 #### Problem Statement
 Same as Course Schedule I, but return the ordering of courses to take. If impossible, return an empty array.
 
+*Example:* `numCourses = 4`, `prerequisites = [[1,0],[2,0],[3,1],[3,2]]`. **Output:** `[0,1,2,3]` or `[0,2,1,3]`.
+
 #### Implementation Overview
 This is a direct application of topological sort.
-- **Solution**: Perform a topological sort (Kahn's is natural here).
-  - If the sort is successful and produces an ordering of all `numCourses`, return that ordering.
-  - If the sort fails (due to a cycle), return an empty array.
+- **Solution**: Perform a topological sort (Kahn's is natural here). If the sort is successful, return the ordering. Otherwise, return an empty array.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def find_order(numCourses: int, prerequisites: list[list[int]]) -> list[int]:
+    adj = {i: [] for i in range(numCourses)}
+    in_degree = [0] * numCourses
+    for course, prereq in prerequisites:
+        adj[prereq].append(course)
+        in_degree[course] += 1
+
+    q = deque([i for i in range(numCourses) if in_degree[i] == 0])
+    topo_order = []
+    while q:
+        u = q.popleft()
+        topo_order.append(u)
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                q.append(v)
+
+    return topo_order if len(topo_order) == numCourses else []
+```
 
 ---
 
@@ -97,12 +170,39 @@ This is a direct application of topological sort.
 `[MEDIUM]` `#topological-sort` `#dfs`
 
 #### Problem Statement
-In a directed graph, a node is "safe" if every path starting from it leads to a "terminal" node (a node with no outgoing edges). Return all safe nodes.
+In a directed graph, a node is "safe" if every path starting from it leads to a "terminal" node (a node with no outgoing edges). Return all safe nodes, sorted.
+
+*Example:* `graph = [[1,2],[2,3],[5],[0],[5],[],[]]`. **Output:** `[2,4,5,6]`.
 
 #### Implementation Overview
 A node is *unsafe* if it's part of a cycle or can reach a cycle.
-- **Graph Reversal**: Reverse all edges. The problem becomes: find all nodes that can reach a terminal node in the original graph. In the reversed graph, terminal nodes become source nodes (in-degree 0).
-- **Solution**: Perform a topological sort (Kahn's) on the **reversed graph**. The resulting topological order is the set of all nodes reachable from the original terminal nodes. These are the safe nodes. Sort and return.
+- **Graph Reversal**: Reverse all edges. The problem becomes: find all nodes that can reach a terminal node in the original graph. In the reversed graph, original terminal nodes become new source nodes (in-degree 0).
+- **Solution**: Perform a topological sort (Kahn's) on the **reversed graph**. The resulting sort gives all nodes reachable from the original terminal nodes. These are the safe nodes.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def eventual_safe_nodes(graph: list[list[int]]) -> list[int]:
+    n = len(graph)
+    rev_adj = {i: [] for i in range(n)}
+    out_degree = [0] * n
+    for u in range(n):
+        out_degree[u] = len(graph[u])
+        for v in graph[u]:
+            rev_adj[v].append(u)
+
+    q = deque([i for i in range(n) if out_degree[i] == 0])
+    safe_nodes = []
+    while q:
+        u = q.popleft()
+        safe_nodes.append(u)
+        for v in rev_adj[u]:
+            out_degree[v] -= 1
+            if out_degree[v] == 0:
+                q.append(v)
+
+    return sorted(safe_nodes)
+```
 
 ---
 
@@ -112,9 +212,43 @@ A node is *unsafe* if it's part of a cycle or can reach a cycle.
 #### Problem Statement
 Given a list of `words` sorted lexicographically by an alien language's rules, derive the order of letters.
 
+*Example:* `words = ["wrt","wrf","er","ett","rftt"]`. **Output:** `"wertf"`.
+
 #### Implementation Overview
-This is a dependency-inference problem.
 1.  **Build Graph**: Letters are vertices. Find dependencies by comparing adjacent words.
     - Compare `words[i]` and `words[i+1]`.
     - Find the first character where they differ. If `words[i] = "wrt"` and `words[i+1] = "wrf"`, then `t` must come before `f`. Add a directed edge `t -> f`.
-2.  **Topological Sort**: Once the graph of letter dependencies is built, perform a topological sort. The result is the alien alphabet. If the sort fails (cycle detected), the order is inconsistent.
+2.  **Topological Sort**: Perform a topological sort on the graph of letter dependencies. The result is the alien alphabet.
+
+#### Python Code Snippet
+```python
+from collections import deque
+def alien_order(words: list[str]) -> str:
+    adj = {c: set() for word in words for c in word}
+    in_degree = {c: 0 for word in words for c in word}
+
+    for i in range(len(words) - 1):
+        w1, w2 = words[i], words[i+1]
+        min_len = min(len(w1), len(w2))
+        # Handle invalid order like ["abc", "ab"]
+        if len(w1) > len(w2) and w1[:min_len] == w2[:min_len]:
+            return ""
+        for j in range(min_len):
+            if w1[j] != w2[j]:
+                if w2[j] not in adj[w1[j]]:
+                    adj[w1[j]].add(w2[j])
+                    in_degree[w2[j]] += 1
+                break
+
+    q = deque([c for c in in_degree if in_degree[c] == 0])
+    res = []
+    while q:
+        c = q.popleft()
+        res.append(c)
+        for neighbor in sorted(list(adj[c])): # sorted for deterministic output
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                q.append(neighbor)
+
+    return "".join(res) if len(res) == len(in_degree) else ""
+```

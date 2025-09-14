@@ -1,192 +1,410 @@
----
-### 1. Recursive Implementation of atoi()
-`[MEDIUM]` `#recursion` `#string-manipulation`
+### `[PATTERN] Direct Recursion & Divide and Conquer`
 
-#### Problem Statement
-The `atoi()` function converts a string to an integer. The function should handle optional leading whitespace, an optional sign character ('+' or '-'), and a sequence of digits. It should stop parsing when it encounters a non-digit character and handle integer overflow by clamping the result to the `INT_MAX` or `INT_MIN` range. Implement the core logic of this function recursively.
+Recursion is a fundamental programming technique where a function calls itself to solve a problem. This pattern focuses on "direct" recursion, where the problem is broken down into smaller, self-similar subproblems. **Divide and Conquer** is a powerful algorithmic paradigm that is a classic application of this recursive pattern.
 
-**Example 1:**
-- **Input:** "42"
-- **Output:** 42
-
-**Example 2:**
-- **Input:** "   -42"
-- **Output:** -42
-
-**Example 3:**
-- **Input:** "4193 with words"
-- **Output:** 4193
-
-#### Implementation Overview
-A recursive solution processes the string one character at a time. The main recursive function takes the current index, sign, and accumulated result as parameters.
-
-1.  **Base Case:** The recursion stops when the index reaches the end of the string or a non-digit character is found. At this point, the final result (multiplied by the sign) is returned.
-2.  **Recursive Step:**
-    - The function is called with the next index (`index + 1`).
-    - The current character is converted to a digit.
-    - Before adding the digit to the result, check for potential overflow. If `result > (INT_MAX - digit) / 10`, it means adding the next digit will cause an overflow. In this case, return `INT_MAX` or `INT_MIN` depending on the sign.
-    - The digit is added to the accumulated result: `result = result * 10 + digit`.
-3.  **Initial Call:** A helper function is used to handle leading whitespace and the optional sign. It determines the sign and the starting index of the digits before making the first call to the recursive function.
-
-#### Tricks/Gotchas
-- **Integer Overflow:** This is the main challenge. The check `result > (INT_MAX - digit) / 10` must be performed *before* the multiplication to prevent the intermediate value itself from overflowing.
-- **Leading Whitespace:** The string must be trimmed of leading spaces before processing begins.
-- **Sign Character:** The sign ('+' or '-') is processed only once at the beginning.
-- **Empty/Invalid String:** If the string contains no valid digits after whitespace and sign, the result is 0.
+#### The Core of Recursion
+Every recursive function has two essential parts:
+1.  **Base Case**: A condition under which the function stops calling itself and returns a simple, known value. This prevents infinite loops.
+2.  **Recursive Step**: The part of the function that breaks the problem down into a smaller version of itself and calls the function again on the smaller piece.
 
 ---
-### 2. Pow(x, n)
-`[MEDIUM]` `#recursion` `#divide-and-conquer` `#binary-exponentiation`
+
+### The Divide and Conquer Paradigm
+
+This strategy involves three steps:
+1.  **Divide**: Break the given problem into subproblems of the same type.
+2.  **Conquer**: Recursively solve these subproblems. If the subproblems are small enough, solve them directly (the base case).
+3.  **Combine**: Combine the solutions of the subproblems to create the solution for the original problem.
+
+---
+
+### 1. Fibonacci Number
+`[EASY]` `#recursion` `#divide-and-conquer`
 
 #### Problem Statement
-Implement `pow(x, n)`, which calculates `x` raised to the power `n` (i.e., x^n).
-
-**Example 1:**
-- **Input:** x = 2.00000, n = 10
-- **Output:** 1024.00000
-
-**Example 2:**
-- **Input:** x = 2.10000, n = 3
-- **Output:** 9.26100
-
-**Example 3:**
-- **Input:** x = 2.00000, n = -2
-- **Output:** 0.25000 (1/4)
+The Fibonacci numbers, commonly denoted `F(n)`, form a sequence such that each number is the sum of the two preceding ones, starting from 0 and 1. That is, `F(0) = 0`, `F(1) = 1`, and `F(n) = F(n - 1) + F(n - 2)` for `n > 1`. Given `n`, calculate `F(n)`.
 
 #### Implementation Overview
-The naive approach of multiplying `x` by itself `n` times is too slow (O(n)). A much more efficient solution uses recursion with a divide-and-conquer approach, often called binary exponentiation.
-
-The core idea is based on the following observations:
-- `x^n = x^(n/2) * x^(n/2)` if `n` is even.
-- `x^n = x * x^((n-1)/2) * x^((n-1)/2)` if `n` is odd.
-
-1.  **Base Case:** If `n` is 0, the result is 1.
-2.  **Recursive Step:**
-    - Call the function recursively with `n/2`. Let the result be `half`.
-    - Square `half` to get `half * half`.
-    - If `n` is even, this squared value is the answer.
-    - If `n` is odd, multiply the squared value by `x` one more time.
-3.  **Handling Negative Exponents:** If `n` is negative, the problem becomes calculating `(1/x)^(-n)`. The initial call can handle this by converting `x` to `1/x` and `n` to `-n`.
-
-This approach reduces the time complexity to O(log n) because the problem size is halved at each recursive step.
+This is a direct translation of the mathematical definition into a recursive function.
+- **Base Case**: If `n` is 0 or 1, return `n`.
+- **Recursive Step (Divide & Combine)**: The problem `F(n)` is "divided" into two subproblems, `F(n-1)` and `F(n-2)`. The results are "combined" by adding them together.
 
 #### Python Code Snippet
 ```python
-def myPow(x: float, n: int) -> float:
+def fibonacci(n: int) -> int:
+    """
+    Calculates the Nth Fibonacci number using a naive recursive approach.
+    """
+    # Base Case
+    if n <= 1:
+        return n
+
+    # Recursive Step (Divide and Conquer)
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+
+#### Tricks/Gotchas
+- **Inefficiency**: This naive recursive solution is extremely inefficient for larger `n` (O(2^n) time complexity) because it re-computes the same Fibonacci numbers many times (e.g., `fib(5)` calls `fib(3)` twice). This problem of "overlapping subproblems" is the primary motivation for **Dynamic Programming**, which stores the results of subproblems to avoid re-computation.
+
+---
+
+### 2. Binary Search (Recursive)
+`[EASY]` `#recursion` `#divide-and-conquer`
+
+#### Problem Statement
+Given a sorted array of integers `nums` and an integer `target`, write a function to search for `target` in `nums`. If `target` exists, then return its index. Otherwise, return -1.
+
+#### Implementation Overview
+Binary search is a perfect example of Divide and Conquer.
+- **Divide**: The "division" step is finding the middle element of the current search space. This divides the array into two halves.
+- **Conquer**: Compare the middle element with the `target`.
+    - If they are equal, the problem is solved (the base case).
+    - If the `target` is smaller, recursively search the *left* half.
+    - If the `target` is larger, recursively search the *right* half.
+- **Combine**: There is no "combine" step, as the result from the recursive call is the final answer.
+
+#### Python Code Snippet
+```python
+def binary_search_recursive(nums: list[int], target: int, left: int, right: int) -> int:
+    """
+    Performs a binary search recursively on a sorted array.
+    """
+    if left > right:
+        return -1 # Base case: search space is empty
+
+    mid = left + (right - left) // 2
+
+    if nums[mid] == target:
+        return mid # Base case: target found
+    elif nums[mid] > target:
+        # Conquer the left half
+        return binary_search_recursive(nums, target, left, mid - 1)
+    else:
+        # Conquer the right half
+        return binary_search_recursive(nums, target, mid + 1, right)
+
+# Wrapper function for initial call
+def search(nums: list[int], target: int) -> int:
+    return binary_search_recursive(nums, target, 0, len(nums) - 1)
+```
+
+---
+
+### 3. Pow(x, n)
+`[MEDIUM]` `#recursion` `#divide-and-conquer`
+
+#### Problem Statement
+Implement `pow(x, n)`, which calculates `x` raised to the power `n`.
+
+#### Implementation Overview
+A naive solution would multiply `x` by itself `n` times (O(n)). A much faster approach uses Divide and Conquer. The key idea is that `x^n = x^(n/2) * x^(n/2)`. If `n` is odd, `x^n = x * x^((n-1)/2) * x^((n-1)/2)`.
+
+- **Base Case**: If `n` is 0, `x^0 = 1`. Return 1.
+- **Divide**: The problem `pow(x, n)` is divided into the subproblem `pow(x, n/2)`.
+- **Conquer**: Recursively call the function to compute `pow(x, n/2)`.
+- **Combine**:
+    - Square the result of the subproblem.
+    - If `n` was odd, multiply by an extra `x`.
+- **Negative `n`**: If `n` is negative, the result is `1 / pow(x, -n)`.
+
+#### Python Code Snippet
+```python
+def my_pow(x: float, n: int) -> float:
+    """
+    Calculates x^n using a fast recursive (divide and conquer) approach.
+    """
     if n == 0:
         return 1.0
 
     # Handle negative exponent
     if n < 0:
-        x = 1 / x
-        n = -n
+        return 1.0 / my_pow(x, -n)
 
-    # Recursive calculation using binary exponentiation
-    def power(base, exp):
-        if exp == 0:
-            return 1.0
+    # Recursive step (Conquer)
+    half = my_pow(x, n // 2)
 
-        half = power(base, exp // 2)
-        half_sq = half * half
+    # Combine
+    result = half * half
+    if n % 2 == 1:
+        result *= x
 
-        if exp % 2 == 0:
-            return half_sq
+    return result
+```
+#### Tricks/Gotchas
+- **Time Complexity**: This approach has a time complexity of O(log n), which is a massive improvement over the naive O(n) solution.
+
+---
+
+### 4. Merge Sort
+`[MEDIUM]` `#sorting` `#divide-and-conquer`
+
+#### Problem Statement
+Given an array of integers `nums`, sort the array in ascending order using Merge Sort.
+
+#### Implementation Overview
+Merge Sort is the canonical example of the Divide and Conquer paradigm.
+1.  **Divide**: Find the middle index of the array and split it into two halves: a left subarray and a right subarray.
+2.  **Conquer**: Recursively call `merge_sort` on both the left and right subarrays. This continues until the subarrays have a size of 1 or 0, which are by definition sorted (the base case).
+3.  **Combine**: Merge the two sorted subarrays back into a single, sorted array. This is done with a helper function, `merge`, which iterates through both subarrays with two pointers, picking the smaller element at each step to build the new sorted array.
+
+#### Python Code Snippet
+```python
+def merge_sort(nums: list[int]) -> list[int]:
+    """
+    Sorts an array using the Merge Sort algorithm.
+    """
+    # Base case: an array with 0 or 1 elements is already sorted
+    if len(nums) <= 1:
+        return nums
+
+    # 1. Divide
+    mid = len(nums) // 2
+    left_half = nums[:mid]
+    right_half = nums[mid:]
+
+    # 2. Conquer
+    sorted_left = merge_sort(left_half)
+    sorted_right = merge_sort(right_half)
+
+    # 3. Combine
+    return merge(sorted_left, sorted_right)
+
+def merge(left: list[int], right: list[int]) -> list[int]:
+    """
+    Merges two sorted arrays into a single sorted array.
+    """
+    merged = []
+    i, j = 0, 0
+
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            merged.append(left[i])
+            i += 1
         else:
-            return base * half_sq
+            merged.append(right[j])
+            j += 1
 
-    return power(x, n)
+    # Append any remaining elements
+    merged.extend(left[i:])
+    merged.extend(right[j:])
+
+    return merged
 ```
 
-#### Tricks/Gotchas
-- **Negative Exponent:** The most common edge case. Remember that `x^-n = 1 / x^n`.
-- **Integer Minimum:** If `n` is the minimum integer value (e.g., -2^31), then `-n` will cause an overflow. This can be handled by calculating `x * myPow(x, n + 1)` for the negative case, or by using a 64-bit integer for the exponent.
-- **Floating-Point Precision:** Be aware of standard floating-point inaccuracies, although for this problem it's usually not a major issue.
-
 ---
-### 3. Count Good numbers
-`[EASY]` `#recursion` `#modular-arithmetic`
+
+### 5. Quick Sort
+`[MEDIUM]` `#sorting` `#divide-and-conquer`
 
 #### Problem Statement
-A digit string is called "good" if the digits at even indices are even (0, 2, 4, 6, 8) and the digits at odd indices are prime (2, 3, 5, 7). Given an integer `n`, return the total number of good digit strings of length `n`. Since the answer may be large, return it modulo 10^9 + 7.
-
-**Example 1:**
-- **Input:** n = 1
-- **Output:** 5 (The strings "0", "2", "4", "6", "8")
-
-**Example 2:**
-- **Input:** n = 4
-- **Output:** 400
+Given an array of integers `nums`, sort the array in ascending order using Quick Sort.
 
 #### Implementation Overview
-This problem can be solved by observing the number of choices for each position.
--   **Even indices:** 5 choices (0, 2, 4, 6, 8)
--   **Odd indices:** 4 choices (2, 3, 5, 7)
+Quick Sort is another famous Divide and Conquer sorting algorithm.
+1.  **Divide**: Pick an element from the array, called the **pivot**. Reorder the array so that all elements with values less than the pivot come before it, while all elements with values greater than the pivot come after it. This step is called **partitioning**. After partitioning, the pivot is in its final sorted position.
+2.  **Conquer**: Recursively call `quick_sort` on the sub-array of elements to the left of the pivot and on the sub-array of elements to the right of the pivot.
+3.  **Combine**: No "combine" step is needed. Because the partitioning places the pivot in its correct final position, the recursive calls on the subarrays handle the rest. The array is sorted in-place.
 
-The total number of good strings is the product of the number of choices for each position.
--   Number of even indices in a string of length `n`: `ceil(n / 2.0)` which is `(n + 1) // 2`.
--   Number of odd indices in a string of length `n`: `floor(n / 2.0)` which is `n // 2`.
+#### Python Code Snippet
+```python
+def quick_sort(nums: list[int], low: int, high: int):
+    """
+    Sorts an array in-place using the Quick Sort algorithm.
+    """
+    if low < high:
+        # 1. Divide: Find the partition index
+        pi = partition(nums, low, high)
 
-Total count = (5 ^ number of even indices) * (4 ^ number of odd indices)
+        # 2. Conquer: Recursively sort the two halves
+        quick_sort(nums, low, pi - 1)
+        quick_sort(nums, pi + 1, high)
 
-Since `n` can be large, we cannot compute the powers directly. We must use a recursive function for modular exponentiation (similar to the `Pow(x, n)` problem) to calculate `(base^exp) % mod` efficiently in O(log exp) time.
+def partition(nums: list[int], low: int, high: int) -> int:
+    """
+    Partitions the array using the last element as the pivot.
+    Places the pivot element at its correct position in the sorted array.
+    """
+    pivot = nums[high]
+    i = low - 1  # Index of smaller element
 
-The final result is `(pow(5, (n+1)//2, mod) * pow(4, n//2, mod)) % mod`.
+    for j in range(low, high):
+        if nums[j] <= pivot:
+            i += 1
+            nums[i], nums[j] = nums[j], nums[i]
 
-#### Tricks/Gotchas
-- **Modular Arithmetic:** All intermediate calculations for the powers must be done modulo 10^9 + 7 to prevent overflow and keep numbers small.
-- **Large `n`:** The O(log n) complexity of modular exponentiation is crucial for passing test cases with large `n`. A naive loop would be too slow.
+    # Place pivot in correct position
+    nums[i + 1], nums[high] = nums[high], nums[i + 1]
+    return i + 1
 
----
-### 4. Sort a stack using recursion
-`[MEDIUM]` `#recursion` `#stack`
-
-#### Problem Statement
-Given a stack, sort it using recursion. You are not allowed to use any explicit loop constructs (like `for` or `while`). You can only use the standard stack operations: `push`, `pop`, `peek`, and `isEmpty`.
-
-**Example 1:**
-- **Input:** Stack: [5, 1, 4, 2, 3]
-- **Output:** Stack: [1, 2, 3, 4, 5] (bottom to top)
-
-#### Implementation Overview
-The solution involves two recursive functions.
-
-1.  **`sortStack(stack)`:** This is the main function.
-    - **Base Case:** If the stack is empty, do nothing.
-    - **Recursive Step:** Pop the top element (`temp`). Recursively call `sortStack` on the rest of the stack. After the smaller stack is sorted, insert `temp` back into its correct sorted position using a helper function.
-
-2.  **`sortedInsert(stack, element)`:** This helper function inserts an element into a sorted stack.
-    - **Base Case:** If the stack is empty or the `element` is greater than the element at the top of the stack, push `element` onto the stack.
-    - **Recursive Step:** If the `element` is smaller than the top element, pop the top element (`top`). Recursively call `sortedInsert` with the smaller stack and the `element`. After the `element` is inserted, push `top` back onto the stack.
-
-This process effectively uses the call stack to hold elements while finding the correct position for each one, mimicking an insertion sort.
-
-#### Tricks/Gotchas
-- **Two Recursive Functions:** The key is to separate the main sorting logic from the logic for inserting an element into a sorted stack.
-- **Call Stack as Storage:** The elegance of this solution lies in its use of the function call stack as temporary storage, avoiding any explicit data structures or loops.
+# Wrapper function for initial call
+def sort_array(nums: list[int]) -> list[int]:
+    quick_sort(nums, 0, len(nums) - 1)
+    return nums
 
 ---
-### 5. Reverse a stack using recursion
+
+### 9. Reverse a Stack using Recursion
 `[EASY]` `#recursion` `#stack`
 
 #### Problem Statement
-Given a stack, reverse its elements using recursion. You are not allowed to use any explicit loop constructs.
-
-**Example 1:**
-- **Input:** Stack: [1, 2, 3, 4, 5] (top to bottom)
-- **Output:** Stack: [5, 4, 3, 2, 1] (top to bottom)
+Given a stack, reverse its elements using only recursion and the standard stack operations. You are not allowed to use any explicit loops.
 
 #### Implementation Overview
-This solution is structurally very similar to sorting a stack and uses two recursive functions.
-
+This solution is structurally similar to sorting a stack. It uses a main recursive function to peel off the top element and a helper function to insert that element at the bottom of the reversed smaller stack.
 1.  **`reverse(stack)`:** The main function.
-    - **Base Case:** If the stack is empty, do nothing.
-    - **Recursive Step:** Pop the top element (`temp`). Recursively call `reverse` on the rest of the stack. After the smaller stack is reversed, insert `temp` at the bottom of the stack using a helper function.
-
+    - **Base Case:** If the stack is empty, there is nothing to reverse.
+    - **Recursive Step:** Pop the top element (`temp`). Recursively call `reverse` on the rest of the stack. After the smaller stack is fully reversed, insert `temp` at the very bottom of it using a helper.
 2.  **`insertAtBottom(stack, element)`:** This helper function inserts an element at the bottom of a stack.
-    - **Base Case:** If the stack is empty, push the `element`.
-    - **Recursive Step:** If the stack is not empty, pop the top element (`top`). Recursively call `insertAtBottom` with the smaller stack and the `element`. After the `element` is inserted at the bottom, push `top` back onto the stack.
+    - **Base Case:** If the stack is empty, just push the `element`.
+    - **Recursive Step:** Pop the top element (`top`), recursively call `insertAtBottom`, and then push `top` back onto the stack. This ensures `element` ends up at the bottom.
 
-This method uses the call stack to hold all stack elements. Once the stack is empty, it starts re-inserting them at the bottom, which effectively reverses the order.
+#### Python Code Snippet
+```python
+def reverse_stack(stack: list):
+    if not stack:
+        return
 
-#### Related Problems
-- **Sort a stack using recursion:** Uses a similar recursive structure but with different logic in the helper function (`sortedInsert` vs. `insertAtBottom`).
+    temp = stack.pop()
+    reverse_stack(stack)
+    insert_at_bottom(stack, temp)
+
+def insert_at_bottom(stack: list, element: int):
+    if not stack:
+        stack.append(element)
+        return
+
+    temp = stack.pop()
+    insert_at_bottom(stack, element)
+    stack.append(temp)
+```
+
+---
+
+### 8. Sort a Stack using Recursion
+`[MEDIUM]` `#recursion` `#stack`
+
+#### Problem Statement
+Given a stack, sort it using only recursion and the standard stack operations (`push`, `pop`, `isEmpty`). You are not allowed to use any explicit loops.
+
+#### Implementation Overview
+The solution involves two recursive functions, demonstrating a powerful way to use the call stack for storage.
+1.  **`sortStack(stack)`:** The main function.
+    - **Base Case:** If the stack is empty, it's sorted.
+    - **Recursive Step:** Pop the top element (`temp`). Recursively call `sortStack` on the rest of the stack. After the smaller stack is sorted, insert `temp` back into its correct sorted position using a helper function.
+2.  **`sortedInsert(stack, element)`:** This helper inserts an element into a sorted stack.
+    - **Base Case:** If the stack is empty or the `element` is greater than the top, push `element`.
+    - **Recursive Step:** If `element` is smaller than the top, pop the top element (`top`), recursively call `sortedInsert`, and then push `top` back.
+
+#### Python Code Snippet
+```python
+def sort_stack(stack: list):
+    if not stack:
+        return
+
+    # Pop the top element
+    temp = stack.pop()
+
+    # Recursively sort the remaining stack
+    sort_stack(stack)
+
+    # Insert the popped element back in sorted order
+    sorted_insert(stack, temp)
+
+def sorted_insert(stack: list, element: int):
+    # Base case: if stack is empty or element is greater than top
+    if not stack or element > stack[-1]:
+        stack.append(element)
+        return
+
+    # Pop elements until we find the right spot
+    temp = stack.pop()
+    sorted_insert(stack, element)
+
+    # Push the popped elements back
+    stack.append(temp)
+```
+
+---
+
+### 7. Count Good Numbers
+`[MEDIUM]` `#recursion` `#modular-arithmetic`
+
+#### Problem Statement
+A digit string is "good" if digits at even indices are even (0, 2, 4, 6, 8) and digits at odd indices are prime (2, 3, 5, 7). Given `n`, return the total number of good digit strings of length `n`, modulo 10^9 + 7.
+
+#### Implementation Overview
+This is a combinatorial problem that requires modular exponentiation for an efficient solution.
+-   Number of choices for even indices: 5 (0, 2, 4, 6, 8)
+-   Number of choices for odd indices: 4 (2, 3, 5, 7)
+-   Number of even indices: `(n + 1) // 2`
+-   Number of odd indices: `n // 2`
+-   Total count = `(5 ^ num_even_indices) * (4 ^ num_odd_indices) % mod`.
+-   We must use a recursive function for modular exponentiation (similar to `Pow(x, n)`) to handle large `n`.
+
+#### Python Code Snippet
+```python
+def count_good_numbers(n: int) -> int:
+    MOD = 10**9 + 7
+
+    def power(base, exp):
+        if exp == 0:
+            return 1
+        half = power(base, exp // 2)
+        half_sq = (half * half) % MOD
+        if exp % 2 == 1:
+            return (base * half_sq) % MOD
+        else:
+            return half_sq
+
+    num_even_indices = (n + 1) // 2
+    num_odd_indices = n // 2
+
+    return (power(5, num_even_indices) * power(4, num_odd_indices)) % MOD
+```
+
+---
+
+### 6. Recursive Implementation of atoi()
+`[MEDIUM]` `#recursion` `#string-manipulation`
+
+#### Problem Statement
+Implement the `atoi()` function, which converts a string to an integer, handling whitespace, signs, and non-digit characters, while also checking for overflow. Implement the core logic recursively.
+
+#### Implementation Overview
+A recursive solution processes the string one character at a time. The main recursive function takes the current index, sign, and accumulated result as parameters.
+1.  **Base Case:** The recursion stops when the index reaches the end of the string or a non-digit character is found.
+2.  **Recursive Step:**
+    - The function is called with the next index (`index + 1`).
+    - The current character is converted to a digit.
+    - Before adding the digit, check for potential overflow.
+    - The digit is added to the accumulated result: `result = result * 10 + digit`.
+3.  **Initial Call:** A non-recursive wrapper handles leading whitespace and the sign.
+
+#### Python Code Snippet
+```python
+def myAtoi_recursive(s: str) -> int:
+    INT_MAX, INT_MIN = 2**31 - 1, -2**31
+
+    def solve(index, sign, result):
+        if index >= len(s) or not s[index].isdigit():
+            return sign * result
+
+        digit = int(s[index])
+
+        # Overflow check
+        if result > INT_MAX // 10 or (result == INT_MAX // 10 and digit > 7):
+            return INT_MAX if sign == 1 else INT_MIN
+
+        return solve(index + 1, sign, result * 10 + digit)
+
+    i, n = 0, len(s)
+    while i < n and s[i] == ' ': i += 1
+
+    sign = 1
+    if i < n and s[i] in ['+', '-']:
+        if s[i] == '-': sign = -1
+        i += 1
+
+    return solve(i, sign, 0)
+```
+```

@@ -1,92 +1,70 @@
+### `[PATTERN] Advanced Parsing and Special Cases`
+
+This pattern covers more complex string parsing problems. These often involve intricate rules, state management, and the use of a **stack** to handle nested structures like parentheses or to reverse evaluation order.
+
+---
+### Parentheses-Based Problems
+
+These problems use counters or stacks to validate, manipulate, or measure properties of strings containing parentheses.
+
 ---
 
-### 1. Remove Outermost Parentheses
-`[EASY]` `#string` `#stack` `#parentheses`
+### 1. Valid Parentheses
+`[EASY]` `#stack` `#parentheses`
 
 #### Problem Statement
-A valid parentheses string is a string that is either `""`, `"( )"`, or `A+B` where `A` and `B` are valid parentheses strings. A primitive valid parentheses string is a nonempty valid parentheses string `S` that cannot be split into `S = A+B` with `A` and `B` being nonempty valid parentheses strings.
-
-Given a valid parentheses string `s`, consider its primitive decomposition: `s = P_1 + P_2 + ... + P_k`. Return `s` after removing the outermost parentheses of every primitive string in the decomposition.
-
-Example: `s = "(()())(())"`. The primitive decomposition is `P_1 = "(()())"` and `P_2 = "(())"`. Removing the outer parentheses gives `"()()"` + `"()"` = `"()()()"`.
+Given a string `s` containing just the characters `(`, `)`, `{`, `}`, `[` and `]`, determine if the input string is valid. An input string is valid if:
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
 
 #### Implementation Overview
-The key is to identify the primitive components. We can do this by keeping track of the balance of open and closed parentheses.
-
-1.  **Initialize**: Create a result list or string builder to construct the output. Initialize a counter `balance` (or `opened`) to 0.
-2.  **Iterate Through String**: Traverse the input string `s` character by character.
-3.  **Track Balance**:
-    -   If you see an opening parenthesis `(`, increment the `balance`.
-    -   If you see a closing parenthesis `)`, decrement the `balance`.
-4.  **Identify Primitive Parts**:
-    -   A primitive string starts when the balance becomes 1 (the first `(`).
-    -   A primitive string ends when the balance returns to 0.
-5.  **Append to Result**:
-    -   The outermost parentheses are the ones encountered when the balance *becomes* 1 (the first open parenthesis) and when the balance is *about to become* 0 (the last closing parenthesis). We should not append these.
-    -   A simple rule: If you see `(` and the balance *before* incrementing was greater than 0, append it.
-    -   If you see `)` and the balance *after* decrementing is greater than 0, append it.
+This is the classic problem for demonstrating the utility of a stack.
+1.  **Initialize a Stack**: Use a list or deque as a stack.
+2.  **Initialize a Mapping**: A hash map is useful to store the matching pairs (e.g., `map = {')': '(', '}': '{', ']': '['}`).
+3.  **Iterate Through String**:
+    -   If the current character is an **opening** bracket (`(`, `{`, `[`), push it onto the stack.
+    -   If the current character is a **closing** bracket (`)`, `}`, `]`):
+        a. Check if the stack is empty. If it is, there's no matching open bracket, so it's invalid.
+        b. Pop the top element from the stack.
+        c. Check if the popped element is the corresponding opening bracket for the current closing bracket (using the map). If not, it's invalid.
+4.  **Final Check**: After the loop, if the stack is **empty**, it means every open bracket had a matching closing bracket. If it's not empty, it means there are unclosed opening brackets.
 
 #### Python Code Snippet
 ```python
-def remove_outer_parentheses(s: str) -> str:
-    """
-    Removes the outermost parentheses of every primitive string in the decomposition.
-    """
-    result = []
-    balance = 0
+def is_valid(s: str) -> bool:
+    stack = []
+    mapping = {")": "(", "}": "{", "]": "["}
 
     for char in s:
-        if char == '(':
-            # Only append if this is not the first '(' of a primitive part
-            if balance > 0:
-                result.append(char)
-            balance += 1
-        else: # char == ')'
-            balance -= 1
-            # Only append if this is not the last ')' of a primitive part
-            if balance > 0:
-                result.append(char)
+        if char in mapping: # It's a closing bracket
+            top_element = stack.pop() if stack else '#'
+            if mapping[char] != top_element:
+                return False
+        else: # It's an opening bracket
+            stack.append(char)
 
-    return "".join(result)
+    return not stack # Stack must be empty for a valid string
 ```
-
-#### Tricks/Gotchas
-- **Balance Counter**: The balance counter is the most crucial part of the logic. It correctly identifies the boundaries of the primitive components without needing to explicitly store them.
-- **When to Append**: The conditions for appending are the core of the solution. Appending `(` only when `balance > 0` and `)` only when `balance` (after decrement) is still `> 0` correctly omits the outermost layer.
-
-#### Related Problems
-- Maximum Nesting Depth of Parentheses
-- Valid Parentheses (classic stack problem)
 
 ---
 
 ### 2. Maximum Nesting Depth of the Parentheses
-`[EASY]` `#string` `#stack` `#parentheses`
+`[EASY]` `#parentheses`
 
 #### Problem Statement
-Given a valid parentheses string `s`, return the maximum nesting depth of `s`. The nesting depth of `""` is 0, the depth of `A+B` is `max(depth(A), depth(B))`, and the depth of `(A)` is `1 + depth(A)`.
-
-Example: `s = "(1+(2*3)+((8)/4))+1"`. The digits are ignored, we only care about the parentheses structure `()(()())()`. The nesting depth is 3.
+Given a valid parentheses string `s`, return its maximum nesting depth.
 
 #### Implementation Overview
-This is a simpler version of the parentheses balance problem. We only need to track the current depth and the maximum depth seen so far.
-
-1.  **Initialize**:
-    -   `max_depth = 0`: To store the maximum depth found.
-    -   `current_depth = 0`: To track the current level of nesting.
-2.  **Iterate Through String**: Traverse the input string `s`.
-3.  **Update Depth**:
-    -   When an opening parenthesis `(` is encountered, it means we are going one level deeper. Increment `current_depth` and update `max_depth = max(max_depth, current_depth)`.
-    -   When a closing parenthesis `)` is encountered, it means we are leaving a level of nesting. Decrement `current_depth`.
-    -   Ignore all other characters.
-4.  Return `max_depth`.
+Because the string is guaranteed to be valid, we don't need a stack to check for mismatches. A simple counter is sufficient to track the depth.
+1.  Initialize `max_depth = 0` and `current_depth = 0`.
+2.  Iterate through the string:
+    - If `char == '('`: Increment `current_depth` and update `max_depth = max(max_depth, current_depth)`.
+    - If `char == ')`: Decrement `current_depth`.
+3.  Return `max_depth`.
 
 #### Python Code Snippet
 ```python
 def max_depth(s: str) -> int:
-    """
-    Calculates the maximum nesting depth of parentheses in a string.
-    """
     max_d = 0
     current_d = 0
     for char in s:
@@ -98,148 +76,185 @@ def max_depth(s: str) -> int:
     return max_d
 ```
 
-#### Tricks/Gotchas
-- **Simplicity**: Don't overthink this with a stack. A simple counter is sufficient because we are guaranteed a valid parentheses string (no need to check for mismatches like `)(`).
-- **What to Track**: The key is realizing you only need to update the max depth when the current depth *increases*.
-
-#### Related Problems
-- Remove Outermost Parentheses
-
 ---
 
-### 3. Roman to Integer and Integer to Roman
-`[EASY]` `#string` `#hashmap` `#parsing`
+### 3. Remove Outermost Parentheses
+`[EASY]` `#parentheses`
 
 #### Problem Statement
-Given a Roman numeral, convert it to an integer. Also, solve the reverse problem: given an integer, convert it to a Roman numeral.
+Given a valid parentheses string `s` which consists of primitive valid parentheses strings concatenated, remove the outermost parentheses of every primitive string.
 
 #### Implementation Overview
-
-**Roman to Integer:**
-The trick to Roman numerals is the subtraction rule (e.g., `IV` is 4, `IX` is 9). A larger numeral placed before a smaller one means addition, but a smaller one before a larger one means subtraction.
-
-1.  **Create a Mapping**: Store the values of Roman numerals in a hash map (e.g., `{'I': 1, 'V': 5, ...}`).
-2.  **Iterate from Right to Left**: Traverse the Roman numeral string from right to left. This makes handling the subtraction rule easier.
-3.  **Logic**:
-    -   The rightmost numeral is always added. Initialize `total` with its value.
-    -   For each subsequent numeral to the left, compare it with the numeral to its right.
-    -   If the current numeral is smaller than the one to its right, subtract it from the `total`.
-    -   Otherwise, add it to the `total`.
-
-**Integer to Roman:**
-This is a greedy problem.
-1.  **Create Mappings**: Create a list of tuples or two parallel arrays mapping values to their Roman numeral strings, sorted in descending order of value. Crucially, this must include the subtraction cases (e.g., `(900, "CM")`, `(400, "CD")`, etc.).
-2.  **Greedy Subtraction**:
-    -   Iterate through the mappings from largest to smallest.
-    -   For each value, while the input `num` is greater than or equal to the value, append the corresponding Roman string to the result and subtract the value from `num`.
+We can identify the primitive parts by tracking the balance of open/closed parentheses.
+1.  Initialize a result list and a `balance` counter to 0.
+2.  Iterate through the string:
+    - If `char == '('`: If `balance > 0` (meaning this is not the first `(` of a primitive part), append it to the result. Then, increment `balance`.
+    - If `char == ')`: Decrement `balance`. If `balance > 0` (meaning this is not the last `)` of a primitive part), append it to the result.
+3.  Join the result list into a string.
 
 #### Python Code Snippet
 ```python
-def roman_to_int(s: str) -> int:
-    roman_map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
-    total = roman_map[s[-1]] # Start with the last numeral
-
-    for i in range(len(s) - 2, -1, -1):
-        # If current numeral is smaller than the one to its right, subtract
-        if roman_map[s[i]] < roman_map[s[i+1]]:
-            total -= roman_map[s[i]]
-        else:
-            total += roman_map[s[i]]
-    return total
-
-def int_to_roman(num: int) -> str:
-    val_map = [
-        (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
-        (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
-        (10, "X"), (9, "IX"), (5, "V"), (4, "IV"),
-        (1, "I")
-    ]
+def remove_outer_parentheses(s: str) -> str:
     result = []
-    for val, roman in val_map:
-        while num >= val:
-            result.append(roman)
-            num -= val
+    balance = 0
+    for char in s:
+        if char == '(':
+            if balance > 0:
+                result.append(char)
+            balance += 1
+        else: # char == ')'
+            balance -= 1
+            if balance > 0:
+                result.append(char)
     return "".join(result)
 ```
 
-#### Tricks/Gotchas
-- **Right-to-Left Traversal**: For Roman-to-Integer, iterating from the right simplifies the logic for the subtraction rule immensely compared to a left-to-right approach.
-- **Complete Mapping**: For Integer-to-Roman, the mapping must include the special subtraction cases (`CM`, `CD`, `XC`, `XL`, `IX`, `IV`) to handle numbers like 4 and 9 correctly in a greedy fashion.
+---
+### Advanced Parsing and Conversion
 
-#### Related Problems
-- Implement Atoi
+These problems involve more complex logic for converting between formats or parsing according to specific, non-trivial rules.
 
 ---
 
-### 4. Implement Atoi (String to Integer)
-`[MEDIUM]` `#string` `#parsing`
+### 4. Simplify Path
+`[MEDIUM]` `#stack` `#parsing`
 
 #### Problem Statement
-Implement the `atoi` function, which converts a string to a 32-bit signed integer. The function should handle:
-1.  Leading whitespace.
-2.  An optional `+` or `-` sign.
-3.  A sequence of digits.
-4.  Stops parsing at the first non-digit character.
-5.  Handles overflow by clamping the result to the 32-bit signed integer range `[-2^31, 2^31 - 1]`.
+Given a string `path`, which is an absolute path (starting with a `/`) to a file or directory in a Unix-style file system, convert it to the simplified canonical path. (e.g., `/a/./b/../../c/` -> `/c`).
 
 #### Implementation Overview
-This is a careful, step-by-step parsing problem. State needs to be managed carefully.
-
-1.  **Initialize**:
-    -   `result = 0`
-    -   `sign = 1`
-    -   `i = 0` (index for traversing the string)
-    -   `n = len(s)`
-2.  **Skip Whitespace**: Increment `i` while `s[i]` is a space.
-3.  **Handle Sign**:
-    -   If `s[i]` is `+` or `-`, set the `sign` accordingly (`-1` for `-`). Increment `i`.
-4.  **Convert Digits**:
-    -   Loop while `i` is within bounds and `s[i]` is a digit.
-    -   In each iteration, update the result: `result = result * 10 + int(s[i])`.
-    -   **Crucially, check for overflow *before* the update**. Compare `result` against `INT_MAX // 10`. If it's greater, or if it's equal and the current digit is greater than `7`, then overflow will occur.
-    -   Increment `i`.
-5.  **Apply Sign and Clamp**:
-    -   The final result is `sign * result`.
-    -   Check if this final result is outside the `[-2^31, 2^31 - 1]` range and clamp if necessary.
+A stack is the perfect data structure for this problem. It naturally handles the directory hierarchy.
+1.  **Split the Path**: Split the input `path` by the `/` delimiter. This will create a list of components.
+2.  **Initialize Stack**: Create a list to use as a stack.
+3.  **Process Components**: Iterate through the components from the split:
+    - If the component is `.` or empty (`""`), ignore it.
+    - If the component is `..`, pop from the stack if it's not empty. This handles moving up a directory.
+    - Otherwise, the component is a directory name. Push it onto the stack.
+4.  **Build Result**: Join the components remaining in the stack with `/` and prepend a `/` to the front to form the final canonical path.
 
 #### Python Code Snippet
 ```python
-def my_atoi(s: str) -> int:
-    INT_MAX = 2**31 - 1
-    INT_MIN = -2**31
+def simplify_path(path: str) -> str:
+    stack = []
+    components = path.split('/')
 
-    i = 0
-    n = len(s)
+    for comp in components:
+        if comp == "" or comp == ".":
+            continue
+        elif comp == "..":
+            if stack:
+                stack.pop()
+        else:
+            stack.append(comp)
 
-    # 1. Skip whitespace
-    while i < n and s[i] == ' ':
-        i += 1
-
-    # 2. Handle sign
-    sign = 1
-    if i < n and (s[i] == '+' or s[i] == '-'):
-        if s[i] == '-':
-            sign = -1
-        i += 1
-
-    # 3. Convert digits and handle overflow
-    result = 0
-    while i < n and s[i].isdigit():
-        digit = int(s[i])
-
-        # Check for overflow before updating result
-        if result > INT_MAX // 10 or (result == INT_MAX // 10 and digit > 7):
-            return INT_MAX if sign == 1 else INT_MIN
-
-        result = result * 10 + digit
-        i += 1
-
-    return sign * result
+    return "/" + "/".join(stack)
 ```
 
-#### Tricks/Gotchas
-- **Overflow Check**: The most difficult part is checking for overflow *before* it happens. Multiplying `result` by 10 can cause overflow, so the check must be done on the previous `result`. `if result > INT_MAX // 10` is the key.
-- **State Machine**: Think of this as a simple state machine: (1) whitespace state, (2) sign state, (3) digit conversion state, (4) end state.
+---
 
-#### Related Problems
-- Roman to Integer
+### 5. Basic Calculator
+`[HARD]` `#stack` `#parsing`
+
+#### Problem Statement
+Given a string `s` representing a valid expression, implement a basic calculator to evaluate it and return the result. The expression string may contain `(`, `)`, `+`, `-`, non-negative integers, and empty spaces.
+
+#### Implementation Overview
+This problem requires a stack to handle the precedence introduced by parentheses.
+1.  **Initialize**: `stack`, `result = 0`, `number = 0`, `sign = 1` (for `+` or `-`).
+2.  **Iterate**: Loop through each character of the string `s`.
+    - If `char` is a **digit**: Build the `number`.
+    - If `char` is `'+'` or `'-'`:
+        - Add the `number` processed so far to the `result` (with the current `sign`).
+        - Reset `number = 0` and update `sign` to `1` or `-1`.
+    - If `char` is `'('`:
+        - This is the start of a sub-expression. Push the current `result` and `sign` onto the stack.
+        - Reset `result = 0` and `sign = 1` for the new sub-expression.
+    - If `char` is `')'`:
+        - Add the last `number` of the sub-expression to its `result`.
+        - Now, "close" the sub-expression. Pop the `prev_sign` and `prev_result` from the stack.
+        - The `result` of the sub-expression is multiplied by `prev_sign` and added to `prev_result`.
+3.  Add the very last `number` to the `result` after the loop finishes.
+
+#### Python Code Snippet
+```python
+def calculate(s: str) -> int:
+    stack = []
+    result = 0
+    number = 0
+    sign = 1  # 1 for +, -1 for -
+
+    for char in s:
+        if char.isdigit():
+            number = number * 10 + int(char)
+        elif char == '+':
+            result += sign * number
+            number = 0
+            sign = 1
+        elif char == '-':
+            result += sign * number
+            number = 0
+            sign = -1
+        elif char == '(':
+            # Push the result and sign onto the stack for later
+            stack.append(result)
+            stack.append(sign)
+            # Reset for the new sub-expression
+            result = 0
+            sign = 1
+        elif char == ')':
+            result += sign * number
+            number = 0
+            # Pop sign and result from stack
+            result *= stack.pop()  # Pop sign
+            result += stack.pop()  # Pop result
+
+    return result + sign * number
+```
+
+---
+
+### 6. Integer to English Words
+`[HARD]` `#parsing` `#mapping`
+
+#### Problem Statement
+Convert a non-negative integer `num` to its English words representation.
+
+#### Implementation Overview
+This is a complex mapping problem that is best solved by breaking the number down into chunks of three (hundreds, tens, ones) and using helper functions.
+1.  **Define Mappings**: Create maps for single digits (1-9), teens (10-19), and tens (20, 30, ...).
+2.  **Main Logic**:
+    - Handle the zero case.
+    - Process the number in chunks of thousands, millions, billions, etc.
+    - For each chunk, use a helper function to convert the 3-digit number (0-999) to words.
+    - Append the appropriate "place" word (e.g., "Thousand", "Million") if the 3-digit chunk is non-zero.
+3.  **Helper Function `three_digit_to_words(n)`**:
+    - If `n >= 100`, handle the hundreds part (e.g., "One Hundred") and recurse on `n % 100`.
+    - If `n >= 20`, handle the tens part (e.g., "Twenty") and recurse on `n % 10`.
+    - If `n >= 10`, handle the teens part (e.g., "Fifteen").
+    - If `n > 0`, handle the ones part (e.g., "Five").
+4.  **Combine and Clean**: Join the parts and clean up any extra spaces.
+
+#### Python Code Snippet
+```python
+def number_to_words(num: int) -> str:
+    if num == 0:
+        return "Zero"
+
+    to_19 = 'One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve ' \
+            'Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen'.split()
+    tens = 'Twenty Thirty Forty Fifty Sixty Seventy Eighty Ninety'.split()
+
+    def words(n):
+        if n < 20:
+            return to_19[n-1:n]
+        if n < 100:
+            return [tens[n//10-2]] + words(n%10)
+        if n < 1000:
+            return [to_19[n//100-1], 'Hundred'] + words(n%100)
+
+        for p, w in enumerate(('Thousand', 'Million', 'Billion'), 1):
+            if n < 1000**(p+1):
+                return words(n//1000**p) + [w] + words(n%1000**p)
+
+    return " ".join(words(num)) or ""
+```

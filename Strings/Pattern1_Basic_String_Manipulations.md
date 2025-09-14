@@ -1,21 +1,24 @@
+### `[PATTERN] Basic String Manipulations`
+
+This pattern covers fundamental string operations that form the building blocks for more complex problems. Common techniques include:
+- **Reversal**: Reversing entire strings or parts of a string.
+- **Two Pointers**: Using pointers from opposite ends to check for properties like palindromes.
+- **Frequency Counting**: Using a hash map or an array to count character occurrences (e.g., for anagrams).
+- **Parsing**: Iterating through a string to convert it into another format (e.g., Roman numerals, integers).
+
 ---
 
 ### 1. Reverse Words in a String
-`[EASY]` `#string` `#two-pointers` `#reversal`
+`[MEDIUM]` `#string` `#two-pointers`
 
 #### Problem Statement
-Given an input string `s`, reverse the order of the words. A word is defined as a sequence of non-space characters. The words in `s` will be separated by at least one space. The returned string should only have a single space separating words and should not have leading or trailing spaces.
-
-*Also covers Palindrome Check, as reversing a string is a key part of checking for palindromes.*
+Given an input string `s`, reverse the order of the words. A word is a sequence of non-space characters. The returned string should have only a single space separating words and no leading/trailing spaces.
 
 #### Implementation Overview
-A common approach is to split the string into words, reverse the list of words, and then join them back together.
-
-1.  **Trim and Split**: Remove any leading/trailing whitespace from the input string and then split it into a list of words using spaces as delimiters. Most languages have built-in functions that handle multiple spaces between words automatically during the split.
+A straightforward approach uses built-in functions to deconstruct and reconstruct the string.
+1.  **Trim and Split**: Use a built-in `split` method to break the string into a list of words. This method usually handles multiple spaces between words and leading/trailing spaces gracefully.
 2.  **Reverse**: Reverse the resulting list of words.
-3.  **Join**: Join the words in the reversed list back into a single string, with a single space between each word.
-
-For a **Palindrome Check**, you would compare the original string (after cleaning it of non-alphanumeric characters and converting to lowercase) with its reversed version.
+3.  **Join**: Join the words back into a string with a single space as a separator.
 
 #### Python Code Snippet
 ```python
@@ -27,144 +30,285 @@ def reverse_words(s: str) -> str:
     words = s.split()
 
     # 2. Reverse the list of words
-    reversed_words = words[::-1]
-
     # 3. Join them back with a single space
-    return " ".join(reversed_words)
-
-def is_palindrome(s: str) -> bool:
-    """
-    Checks if a string is a palindrome after cleaning.
-    """
-    # Clean the string: keep only alphanumeric chars and convert to lowercase
-    cleaned_s = "".join(filter(str.isalnum, s)).lower()
-    # Check if the cleaned string is equal to its reverse
-    return cleaned_s == cleaned_s[::-1]
+    return " ".join(reversed(words))
 ```
 
 #### Tricks/Gotchas
-- **Whitespace**: Be mindful of leading, trailing, and multiple spaces between words. Using built-in `split()` and `join()` methods usually handles this gracefully.
-- **In-place Reversal**: A more complex, in-place approach involves reversing the entire string first, and then reversing each word individually. This is an O(1) space solution.
-
-#### Related Problems
-- Rotate a LL
-- check whether one string is a rotation of another
+- **In-place Solution (O(1) space)**: A common follow-up is to solve this in-place. This involves:
+    1. Reversing the entire string. (`"the sky is blue"` -> `"eulb si yks eht"`)
+    2. Reversing each word in the reversed string. (`"eulb si yks eht"` -> `"blue is sky the"`)
 
 ---
 
-### 2. Check if one string is a rotation of another
-`[MEDIUM]` `#string` `#concatenation`
+### 2. Palindrome Check
+`[EASY]` `#string` `#two-pointers`
+
+#### Problem Statement
+Given a string `s`, return `true` if it is a palindrome, or `false` otherwise. A string is a palindrome if it reads the same forward and backward, after converting all uppercase letters into lowercase and removing all non-alphanumeric characters.
+
+#### Implementation Overview
+The most efficient method uses two pointers starting from opposite ends of the string.
+1.  **Setup**: Initialize `left = 0` and `right = len(s) - 1`.
+2.  **Iterate and Compare**: Loop while `left < right`.
+    a. Move `left` forward until it points to an alphanumeric character.
+    b. Move `right` backward until it points to an alphanumeric character.
+    c. Compare the lowercase versions of the characters at `left` and `right`. If they don't match, it's not a palindrome.
+    d. If they match, move both pointers inward (`left += 1`, `right -= 1`).
+3.  If the loop completes, the string is a palindrome.
+
+#### Python Code Snippet
+```python
+def is_palindrome(s: str) -> bool:
+    left, right = 0, len(s) - 1
+    while left < right:
+        # Move pointers past non-alphanumeric characters
+        while left < right and not s[left].isalnum():
+            left += 1
+        while left < right and not s[right].isalnum():
+            right -= 1
+
+        # Compare characters
+        if s[left].lower() != s[right].lower():
+            return False
+
+        left += 1
+        right -= 1
+
+    return True
+```
+
+---
+
+### 3. Valid Anagram
+`[EASY]` `#string` `#hash-map` `#sorting`
+
+#### Problem Statement
+Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise. An anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
+
+#### Implementation Overview
+There are two common solutions.
+
+**a) Sorting:**
+If two strings are anagrams, their sorted versions will be identical.
+1. Check if the lengths are equal. If not, they can't be anagrams.
+2. Sort both strings and compare the results.
+
+**b) Frequency Counting:**
+Anagrams must have the same frequency of each character.
+1. Check for equal length.
+2. Use a hash map (or an array of size 26 for lowercase English letters) to count character frequencies in `s`.
+3. Iterate through `t`, decrementing the count for each character. If a character is not in the map or its count is already zero, they are not anagrams.
+4. If the loop completes, they are anagrams.
+
+#### Python Code Snippet (Frequency Counting)
+```python
+import collections
+
+def is_anagram(s: str, t: str) -> bool:
+    if len(s) != len(t):
+        return False
+
+    counts = collections.Counter(s)
+
+    for char in t:
+        if counts[char] == 0:
+            return False
+        counts[char] -= 1
+
+    return True
+```
+
+---
+
+### 4. String to Integer (atoi)
+`[MEDIUM]` `#string` `#parsing`
+
+#### Problem Statement
+Implement the `myAtoi(string s)` function, which converts a string to a 32-bit signed integer. The algorithm is:
+1. Read in and ignore any leading whitespace.
+2. Check if the next character is `'-'` or `'+'`. Read this character in if it is either.
+3. Read in the next characters until the next non-digit character or the end of the input is reached.
+4. Convert these digits into an integer.
+5. If the integer is out of the 32-bit signed integer range `[-2^31, 2^31 - 1]`, then clamp the integer.
+6. Return the integer as the final result.
+
+#### Implementation Overview
+This is a state-based parsing problem. We must carefully process the string character by character.
+1.  **Initialize**: `i = 0` (pointer), `sign = 1`, `result = 0`.
+2.  **Whitespace**: Skip all leading spaces.
+3.  **Sign**: Check for `'+'` or `'-'`. If found, update `sign` and advance `i`.
+4.  **Digits**: Loop while the current character is a digit.
+    a. Convert the character to an integer `digit`.
+    b. **Check for Overflow**: Before updating `result`, check if `result * 10 + digit` will exceed the integer limits. Let `INT_MAX = 2**31 - 1` and `INT_MIN = -2**31`. The check is `if result > INT_MAX // 10 or (result == INT_MAX // 10 and digit > 7)`.
+    c. If overflow, return `INT_MAX` or `INT_MIN` based on the `sign`.
+    d. Update `result = result * 10 + digit`.
+5.  Return `sign * result`.
+
+#### Python Code Snippet
+```python
+def my_atoi(s: str) -> int:
+    i, n = 0, len(s)
+    INT_MAX, INT_MIN = 2**31 - 1, -2**31
+
+    # 1. Skip whitespace
+    while i < n and s[i] == ' ':
+        i += 1
+
+    # 2. Check for sign
+    sign = 1
+    if i < n and (s[i] == '+' or s[i] == '-'):
+        if s[i] == '-':
+            sign = -1
+        i += 1
+
+    # 3. Read digits and handle overflow
+    result = 0
+    while i < n and s[i].isdigit():
+        digit = int(s[i])
+        # Overflow check
+        if result > INT_MAX // 10 or (result == INT_MAX // 10 and digit > 7):
+            return INT_MAX if sign == 1 else INT_MIN
+
+        result = result * 10 + digit
+        i += 1
+
+    return sign * result
+```
+
+---
+
+### 5. Roman to Integer
+`[EASY]` `#string` `#parsing` `#hash-map`
+
+#### Problem Statement
+Given a roman numeral, convert it to an integer. Roman numerals are represented by seven different symbols: `I, V, X, L, C, D, M`.
+
+#### Implementation Overview
+The key is to handle the subtractive cases (e.g., `IV` is 4, `IX` is 9). A character's value might be subtracted from the next if it's smaller.
+1.  Create a mapping from Roman symbols to their integer values.
+2.  Iterate through the string from left to right.
+3.  For each character `s[i]`, check the value of the next character `s[i+1]`.
+    - If `value(s[i]) < value(s[i+1])`, it's a subtractive case. Subtract `value(s[i])` from the total.
+    - Otherwise, it's an additive case. Add `value(s[i])` to the total.
+
+#### Python Code Snippet
+```python
+def roman_to_int(s: str) -> int:
+    roman_map = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000}
+    result = 0
+
+    for i in range(len(s)):
+        # Check for subtractive case
+        if i + 1 < len(s) and roman_map[s[i]] < roman_map[s[i+1]]:
+            result -= roman_map[s[i]]
+        else:
+            result += roman_map[s[i]]
+
+    return result
+```
+
+---
+
+### 6. Integer to Roman
+`[MEDIUM]` `#string` `#greedy`
+
+#### Problem Statement
+Given an integer, convert it to a roman numeral.
+
+#### Implementation Overview
+A greedy approach works best here. We process the number from largest values to smallest.
+1.  Create a list of `(value, symbol)` pairs, sorted from largest to smallest (e.g., `(1000, "M")`, `(900, "CM")`, `(500, "D")`, ...). Including the subtractive cases (`CM`, `CD`, `XC`, `XL`, `IX`, `IV`) makes the logic much simpler.
+2.  Iterate through this list. For each `(value, symbol)` pair:
+    - While the input `num` is greater than or equal to `value`, append the `symbol` to the result string and subtract `value` from `num`.
+3.  Continue until `num` becomes 0.
+
+#### Python Code Snippet
+```python
+def int_to_roman(num: int) -> str:
+    # List of values and symbols, sorted from largest to smallest
+    val_syms = [
+        (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
+        (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
+        (10, "X"), (9, "IX"), (5, "V"), (4, "IV"),
+        (1, "I")
+    ]
+
+    result = []
+    for val, sym in val_syms:
+        while num >= val:
+            result.append(sym)
+            num -= val
+
+    return "".join(result)
+
+---
+
+### 9. Reverse Every Word in a String
+`[EASY]` `#string` `#reversal`
+
+#### Problem Statement
+Given a string `s`, reverse each word in the string. The order of the words and the whitespace should be preserved.
+
+#### Implementation Overview
+This is a direct application of string manipulation.
+1.  **Split the String**: Split the input string `s` into a list of words.
+2.  **Reverse Each Word**: Iterate through the list of words. For each word, reverse it.
+3.  **Join the Words**: Join the list of reversed words back into a single string, using a space as the separator.
+
+#### Python Code Snippet
+```python
+def reverse_each_word(s: str) -> str:
+    words = s.split(' ')
+    reversed_words = [word[::-1] for word in words]
+    return " ".join(reversed_words)
+```
+
+---
+
+### 8. Check if One String is a Rotation of Another
+`[EASY]` `#string` `#concatenation`
 
 #### Problem Statement
 Given two strings, `s1` and `s2`, return `true` if `s2` is a rotation of `s1`, and `false` otherwise. For example, `"waterbottle"` is a rotation of `"erbottlewat"`.
 
 #### Implementation Overview
 This problem has a famously clever and simple solution.
-1.  **Length Check**: If the lengths of `s1` and `s2` are not equal, it's impossible for `s2` to be a rotation of `s1`. Return `false`.
-2.  **Concatenation**: Create a new string `s3` by concatenating `s1` with itself (`s1 + s1`).
-3.  **Substring Check**: If `s2` is a rotation of `s1`, then `s2` must be a substring of `s3`. Check if `s2` exists within `s3`.
-
-For example, if `s1 = "waterbottle"` and `s2 = "erbottlewat"`:
-- `s3 = "waterbottlewaterbottle"`
-- `s2` is clearly a substring of `s3`.
+1.  **Length Check**: If `s1` and `s2` have different lengths, `s2` cannot be a rotation of `s1`.
+2.  **Concatenation**: Create a new string by concatenating `s1` with itself (`s1 + s1`).
+3.  **Substring Check**: If `s2` is a rotation of `s1`, then `s2` must be a substring of the new concatenated string. Check if `s2` exists within `s1 + s1`.
 
 #### Python Code Snippet
 ```python
 def is_rotation(s1: str, s2: str) -> bool:
-    """
-    Checks if s2 is a rotation of s1.
-    """
-    # 1. Check if lengths are equal and non-zero
     if len(s1) != len(s2) or not s1:
         return False
 
-    # 2. Concatenate s1 with itself
-    s1s1 = s1 + s1
-
-    # 3. Check if s2 is a substring of the concatenated string
-    return s2 in s1s1
+    concatenated_s1 = s1 + s1
+    return s2 in concatenated_s1
 ```
-
-#### Tricks/Gotchas
-- **Empty Strings**: The logic should handle empty strings as a valid case if the problem defines it as such. The provided snippet returns `False` for empty strings.
-- **Efficiency**: This approach is efficient, relying on optimized built-in substring search algorithms.
-
-#### Related Problems
-- Reverse words in a given string
 
 ---
 
-### 3. Largest Odd Number in String
+### 7. Largest Odd Number in String
 `[EASY]` `#string` `#greedy`
 
 #### Problem Statement
 You are given a string `num`, representing a large integer. Return the largest-valued odd integer (as a string) that is a non-empty substring of `num`, or an empty string `""` if no odd integer exists.
 
 #### Implementation Overview
-A greedy approach is the most effective here. The largest odd number will always be a prefix of the original number that ends in the last odd digit.
+A greedy approach is most effective. The largest odd number will be the longest possible prefix of the original number that ends in an odd digit.
 1.  **Iterate from the End**: Traverse the string `num` from right to left.
-2.  **Find First Odd Digit**: The first digit you encounter that is odd (i.e., '1', '3', '5', '7', '9') will be the last digit of the largest possible odd number substring.
-3.  **Return the Prefix**: Once you find the first odd digit from the right at index `i`, the substring from the beginning of the string up to and including that digit (`num[0...i]`) is the answer.
-4.  **No Odd Digits**: If you traverse the entire string and find no odd digits, it means no odd number can be formed. Return `""`.
+2.  **Find First Odd Digit**: The first digit you encounter that is odd will be the last digit of the largest possible odd number substring.
+3.  **Return the Prefix**: Once you find the first odd digit from the right at index `i`, the substring `num[:i+1]` is the answer.
+4.  **No Odd Digits**: If the loop finishes, no odd digits were found. Return `""`.
 
 #### Python Code Snippet
 ```python
 def largest_odd_number(num: str) -> str:
-    """
-    Finds the largest odd number that is a substring of num.
-    """
     for i in range(len(num) - 1, -1, -1):
-        # Check if the digit is odd
         if int(num[i]) % 2 != 0:
-            # If it is, the substring from the start to this digit is the answer
             return num[:i+1]
-
-    # If no odd digit is found
     return ""
 ```
-
-#### Tricks/Gotchas
-- **String to Integer Conversion**: Remember to convert the character digit to an integer before checking if it's odd.
-- **Greedy Choice**: The greedy choice of finding the rightmost odd digit works because any longer substring ending in an earlier odd digit would be a smaller number (since we want the longest possible prefix).
-
-#### Related Problems
-- (Relatively simple and unique)
-
----
-
-### 4. Reverse Every Word in A String
-`[EASY]` `#string` `#reversal`
-
-#### Problem Statement
-Given a string `s`, reverse each word in the string. The order of the words and the whitespace should be preserved.
-
-Example: `s = "Let's take LeetCode contest"` becomes `s = "s'teL ekat edoCteeL tsetnoc"`.
-
-#### Implementation Overview
-This is a direct application of string manipulation.
-1.  **Split the String**: Split the input string `s` into a list of words. The delimiter should be a space.
-2.  **Reverse Each Word**: Iterate through the list of words. For each word, reverse it. A simple way to do this in Python is with slicing `word[::-1]`.
-3.  **Join the Words**: Join the list of reversed words back into a single string, using a space as the separator.
-
-#### Python Code Snippet
-```python
-def reverse_each_word(s: str) -> str:
-    """
-    Reverses each word in a string while preserving word order.
-    """
-    # 1. Split the string into words
-    words = s.split(' ')
-
-    # 2. Reverse each word
-    reversed_words = [word[::-1] for word in words]
-
-    # 3. Join them back with spaces
-    return " ".join(reversed_words)
 ```
-
-#### Tricks/Gotchas
-- **`split(' ')` vs `split()`**: Using `split(' ')` preserves multiple spaces (they become empty strings in the list), whereas `split()` (with no arguments) intelligently handles multiple spaces and collapses them. For this problem, preserving whitespace might be important, so `split(' ')` is often the correct choice, though the example doesn't feature multiple spaces. The provided solution assumes single spaces.
-- **Efficiency**: This approach is very efficient, typically running in O(N) time where N is the length of the string.
-
-#### Related Problems
-- Reverse words in a given string

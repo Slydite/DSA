@@ -1,29 +1,35 @@
 # Pattern 2: Implementation with Other Data Structures
 
-This pattern involves implementing a data structure using the properties of another. These problems are common interview questions to test the understanding of the fundamental operations (LIFO for stacks, FIFO for queues).
+This pattern involves implementing a data structure using the properties of another. These problems are common interview questions to test the understanding of the fundamental operations (LIFO for stacks, FIFO for queues) and the ability to manipulate data flows.
 
 ---
 
-### 1. Implement Stack using Queue
-`[MEDIUM]` `#implementation` `#queue`
+### 1. Implement Stack using Queues
+`[EASY]` `#implementation` `#queue` `#stack`
 
 #### Problem Statement
 Implement a LIFO stack using only one or two queues. The implemented stack should support all the functions of a normal stack (`push`, `top`, `pop`, and `empty`).
 
 #### Implementation Overview
-The goal is to make the queue, a FIFO structure, behave in a LIFO manner. The key is to re-arrange the queue elements on every push so that the most recently added element is at the front.
+The goal is to make the queue, a FIFO structure, behave in a LIFO manner. The key is to re-arrange the queue elements on every push or pop so that the desired element is at the front.
 
-**Method: Making `push` costly (O(n)) using a single queue**
+**Method 1: Making `push` costly (O(N)) using a single queue**
+This is the most common approach. The idea is to make the newest element the front of the queue after every push.
 1.  **Push `x`**:
     - Get the current size of the queue, say `s`.
     - Enqueue the new element `x`.
-    - Dequeue the first `s` elements and enqueue them back to the rear of the queue. This moves the new element `x` to the front.
-2.  **Pop**: Dequeue from the queue.
-3.  **Top**: Peek at the front of the queue.
+    - Dequeue the first `s` elements and immediately enqueue them back to the rear of the queue. This rotation moves the new element `x` to the front.
+2.  **Pop**: Dequeue from the front of the queue. This is O(1).
+3.  **Top**: Peek at the front of the queue. This is O(1).
 
-This approach effectively reverses the order of the existing elements after the new element is added, making the queue behave like a stack.
+**Method 2: Making `pop` costly (O(N)) using a single queue**
+1. **Push `x`**: Simply enqueue the element. This is O(1).
+2. **Pop**: To get the last element, we must dequeue and re-enqueue all but the last element.
+   - Dequeue `size - 1` elements and add them to the back.
+   - The element now at the front is the one we want. Dequeue and return it.
+   - This is an O(N) operation.
 
-#### Python Code Snippet (Single Queue)
+#### Python Code Snippet (Method 1: Costly Push)
 ```python
 from collections import deque
 
@@ -32,7 +38,7 @@ class MyStack:
         self.q = deque()
 
     def push(self, x: int) -> None:
-        # Add the new element
+        # Add the new element to the back
         self.q.append(x)
         # Rotate the queue to make the new element the front
         for _ in range(len(self.q) - 1):
@@ -54,23 +60,23 @@ class MyStack:
 
 ---
 
-### 2. Implement Queue using Stack
-`[MEDIUM]` `#implementation` `#stack`
+### 2. Implement Queue using Stacks
+`[EASY]` `#implementation` `#stack` `#queue`
 
 #### Problem Statement
 Implement a FIFO queue using only two stacks. The implemented queue should support all the functions of a normal queue (`push` (enqueue), `peek` (front), `pop` (dequeue), and `empty`).
 
 #### Implementation Overview
-This is a classic problem that uses an "amortized" approach with two stacks, often named `input` and `output`.
-- The `input` stack is for `push` operations.
-- The `output` stack is for `pop` and `peek` operations.
+This is a classic problem that uses an **amortized O(1)** approach with two stacks, often named `input` and `output`.
+- The `input` stack is for `push` operations. All new elements go here.
+- The `output` stack is for `pop` and `peek` operations. It holds elements in reversed (queue-like) order.
 
-The core idea is to transfer elements from `input` to `output` only when the `output` stack is empty. This reverses their order, making the first element that went into the `input` stack become the top element of the `output` stack.
+The core idea is to transfer elements from `input` to `output` **only when the `output` stack is empty**. This reverses their order, making the first element that went into the `input` stack become the top element of the `output` stack.
 
-1.  **Push `x`**: Simply push `x` onto the `input` stack. This is an O(1) operation.
+1.  **Push `x`**: Simply push `x` onto the `input` stack. This is always an O(1) operation.
 2.  **Pop/Peek**:
     - First, check if the `output` stack is empty.
-    - If it is, pop every element from `input` and push it onto `output`. This O(n) transfer operation only happens occasionally.
+    - If `output` is empty, pop every element from `input` and push it onto `output`. This O(N) transfer operation only happens occasionally.
     - If `output` is not empty (or after the transfer), `pop` or `peek` from the `output` stack. This is an O(1) operation.
 
 #### Python Code Snippet (Amortized)
@@ -106,4 +112,5 @@ class MyQueue:
 ```
 
 #### Tricks/Gotchas
-- The efficiency of the queue-using-stacks implementation comes from the amortized analysis. A common mistake is to transfer elements back and forth on every operation, which would be highly inefficient. The key is to only move elements from `input` to `output` when `output` is exhausted.
+- **Amortized Analysis**: The efficiency of this implementation comes from the amortized analysis. While a single `pop` or `peek` can be O(N), it only happens when the `output` stack is empty. Over a series of `n` operations, the total time is proportional to `n`, making the average time per operation O(1).
+- **Common Mistake**: A common error is to transfer elements back and forth on every operation, which would be highly inefficient. The key is to **only** move elements from `input` to `output` when `output` is exhausted.

@@ -5,7 +5,7 @@ This pattern covers the most challenging problems in the BST topic. These proble
 ---
 
 ### 13. Merge 2 BST's
-`[HARD]` `#bst` `#inorder-traversal` `#construction`
+`[MEDIUM]` `#bst` `#inorder-traversal` `#construction`
 
 #### Problem Statement
 Given two Binary Search Trees, merge them into a single balanced BST.
@@ -87,7 +87,7 @@ def merge_bsts(root1: TreeNode, root2: TreeNode) -> TreeNode:
 ---
 
 ### 16. Largest BST in Binary Tree
-`[HARD]` `#bst` `#binary-tree` `#postorder-traversal` `#dp-on-trees`
+`[MEDIUM]` `#bst` `#binary-tree` `#postorder-traversal` `#dp-on-trees`
 
 #### Problem Statement
 Given a binary tree, find the size (number of nodes) of the largest subtree that is also a valid Binary Search Tree.
@@ -154,6 +154,7 @@ class Solution:
             return NodeInfo(True, current_size, current_min, current_max)
         else:
             # It is not a valid BST, so propagate this info up
+            # We don't care about the size or values if it's not a BST
             return NodeInfo(False, 0, 0, 0)
 ```
 

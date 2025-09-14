@@ -91,6 +91,78 @@ class Solution:
 
 ---
 
+### 7. Maximum Width of Binary Tree
+`[MEDIUM]` `#traversal` `#level-order` `#bfs`
+
+#### Problem Statement
+Given the root of a binary tree, return the maximum width of the tree. The width of one level is defined as the length between the end-nodes (the leftmost and rightmost non-null nodes), where the null nodes between the end-nodes that would be present in a complete binary tree are also counted into the length calculation.
+
+**Example:**
+Input: `root = [1,3,2,5,3,null,9]`
+```
+      1
+     / \
+    3   2
+   / \   \
+  5   3   9
+```
+Output: `4` (The maximum width is at level 3, between nodes 5 and 9, with nodes (5,6,7,8) giving a width of 4).
+
+#### Implementation Overview
+This problem is solved using a level-order traversal (BFS). The key is to assign an index to each node as if it were in a complete binary tree.
+- If a node has index `i`, its left child will have index `2*i + 1` and its right child will have index `2*i + 2`.
+- For each level, the width is `(index of rightmost node) - (index of leftmost node) + 1`. We track the maximum width found across all levels.
+
+**Algorithm:**
+1.  Initialize `max_width = 0` and a queue for BFS.
+2.  The queue will store `(node, index)` pairs. Add `(root, 0)` to the queue.
+3.  In each level of the BFS:
+    a. Get the `level_size`.
+    b. Record the index of the first node in the level (`level_start_index`).
+    c. Loop `level_size` times, dequeueing `(node, index)`.
+    d. The `index` of the last node in the level will be our `level_end_index`.
+    e. Enqueue the children with their calculated indices: `(node.left, 2*index + 1)` and `(node.right, 2*index + 2)`.
+    f. After the level is processed, calculate the width: `max_width = max(max_width, level_end_index - level_start_index + 1)`.
+
+#### Python Code Snippet
+```python
+from collections import deque
+
+class Solution:
+    def widthOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+
+        max_width = 0
+        queue = deque([(root, 0)]) # (node, index)
+
+        while queue:
+            level_size = len(queue)
+            # Get the index of the first node at this level
+            level_start_index = queue[0][1]
+
+            for i in range(level_size):
+                node, index = queue.popleft()
+
+                # The index of the last node at this level
+                if i == level_size - 1:
+                    level_end_index = index
+
+                if node.left:
+                    queue.append((node.left, 2 * index + 1))
+                if node.right:
+                    queue.append((node.right, 2 * index + 2))
+
+            max_width = max(max_width, level_end_index - level_start_index + 1)
+
+        return max_width
+```
+
+#### Tricks/Gotchas
+- **Index Normalization:** The indices can become very large. A common optimization is to normalize them at each level by subtracting the `level_start_index`. The new index for a node would be `index - level_start_index`, and its children would be `2 * (index - level_start_index) + 1` and `+ 2`. This keeps the numbers smaller.
+
+---
+
 ### 2. Boundary Traversal of Binary Tree
 `[MEDIUM]` `#traversal` `#boundary`
 

@@ -47,8 +47,6 @@ The search operation efficiently uses the BST property to discard half of the tr
     - If `target > current.val`, the target must be in the right subtree. Move to the right child: `current = current.right`.
 4.  Repeat this process. If `current` becomes `null`, it means the value is not in the tree.
 
-This can be implemented both iteratively (with a `while` loop) and recursively.
-
 #### Python Code Snippet (Iterative)
 ```python
 class TreeNode:
@@ -69,50 +67,34 @@ def search_bst(root: TreeNode, val: int) -> TreeNode:
     return None
 ```
 
-#### Tricks/Gotchas
-- **Efficiency:** The search is very fast (O(log N) on a balanced tree) because we eliminate a large portion of the search space at every step.
-
-#### Related Problems
-- 6. Insert a given Node in Binary Search Tree
-- 7. Delete a Node in Binary Search Tree
-
 ---
 
 ### 3. Find Min/Max in BST
-`[FUNDAMENTAL]` `[MEDIUM]` `#bst` `#traversal`
+`[FUNDAMENTAL]` `[EASY]` `#bst` `#traversal`
 
 #### Problem Statement
 Given the root of a BST, find the minimum and maximum value nodes in the tree.
 
 #### Implementation Overview
-The BST properties provide a simple path to the minimum and maximum elements.
--   **Minimum Value:** The smallest value is always the terminal node of the path that goes left from the root as much as possible. To find it, start at the root and repeatedly move to the left child until you reach a node with no left child. This node is the minimum.
+-   **Minimum Value:** The smallest value is always the terminal node of the path that goes left from the root as much as possible. To find it, start at the root and repeatedly move to the left child until you reach a node with no left child.
 -   **Maximum Value:** Symmetrically, the largest value is the rightmost node. To find it, start at the root and repeatedly move to the right child until you reach a node with no right child.
 
 #### Python Code Snippet
 ```python
 def find_min(root: TreeNode) -> TreeNode:
-    if not root:
-        return None
+    if not root: return None
     current = root
     while current.left:
         current = current.left
     return current
 
 def find_max(root: TreeNode) -> TreeNode:
-    if not root:
-        return None
+    if not root: return None
     current = root
     while current.right:
         current = current.right
     return current
 ```
-
-#### Tricks/Gotchas
-- **Empty Tree:** Always handle the case where the input `root` is `null`.
-
-#### Related Problems
-- 7. Delete a Node in Binary Search Tree (uses `find_min` to find the inorder successor).
 
 ---
 
@@ -120,16 +102,14 @@ def find_max(root: TreeNode) -> TreeNode:
 `[EASY]` `#bst` `#traversal`
 
 #### Problem Statement
-Given the root of a BST and a key, find the "ceil" of the key. The ceil is the smallest value in the tree that is greater than or equal to the key. If no such value exists, return -1.
+Given the root of a BST and a key, find the "ceil" of the key. The ceil is the smallest value in the tree that is greater than or equal to the key.
 
 #### Implementation Overview
 This is a modified search. We traverse the tree, keeping track of the best possible `ceil` value found so far.
-1.  Initialize `ceil = -1` (or `null`).
-2.  Start a traversal from the `root`.
-3.  - If `current.val == key`, we have found the exact value. This is the ceil. Return `current.val`.
-    - If `key < current.val`, the current node is a *potential* answer for the ceil. We record it (`ceil = current.val`) and then move to the left subtree (`current = current.left`) to see if we can find an even smaller value that is still greater than the key.
-    - If `key > current.val`, the current node is too small to be the ceil. The ceil must be in the right subtree, so we move right (`current = current.right`) without updating our `ceil` variable.
-4.  The loop terminates when `current` is `null`. The last recorded `ceil` value is the answer.
+1.  Initialize `ceil = -1`.
+2.  If `current.val == key`, return `key`.
+3.  If `key < current.val`, the current node is a *potential* answer. Record it (`ceil = current.val`) and move left to find an even better (smaller) ceil.
+4.  If `key > current.val`, the current node is too small. The ceil must be in the right subtree.
 
 #### Python Code Snippet
 ```python
@@ -139,21 +119,13 @@ def find_ceil(root: TreeNode, key: int) -> int:
     while current:
         if current.val == key:
             return key
-
         if key < current.val:
-            ceil = current.val # Potential answer
-            current = current.left # Try to find a smaller ceil
+            ceil = current.val
+            current = current.left
         else:
-            current = current.right # Current node is too small
-
+            current = current.right
     return ceil
 ```
-
-#### Tricks/Gotchas
-- **Candidate Selection:** The key is to only update your `ceil` candidate when you find a node larger than the key, and then immediately try to find a "better" (smaller) candidate in its left subtree.
-
-#### Related Problems
-- 5. Floor in a Binary Search Tree
 
 ---
 
@@ -161,16 +133,14 @@ def find_ceil(root: TreeNode, key: int) -> int:
 `[EASY]` `#bst` `#traversal`
 
 #### Problem Statement
-Given the root of a BST and a key, find the "floor" of the key. The floor is the largest value in the tree that is less than or equal to the key. If no such value exists, return -1.
+Given the root of a BST and a key, find the "floor" of the key. The floor is the largest value in the tree that is less than or equal to the key.
 
 #### Implementation Overview
-The logic is symmetric to finding the ceil. We traverse the tree, keeping track of the best `floor` value found so far.
-1.  Initialize `floor = -1` (or `null`).
-2.  Start a traversal from the `root`.
-3.  - If `current.val == key`, we have found the exact value. This is the floor. Return `current.val`.
-    - If `key < current.val`, the current node is too large to be the floor. The floor must be in the left subtree, so we move left (`current = current.left`).
-    - If `key > current.val`, the current node is a *potential* answer. We record it (`floor = current.val`) and then move to the right subtree (`current = current.right`) to see if we can find a "better" (larger) floor.
-4.  The loop terminates when `current` is `null`. The last recorded `floor` value is the answer.
+The logic is symmetric to finding the ceil.
+1. Initialize `floor = -1`.
+2. If `current.val == key`, return `key`.
+3. If `key > current.val`, the current node is a *potential* answer. Record it (`floor = current.val`) and move right to find an even better (larger) floor.
+4. If `key < current.val`, the current node is too large. The floor must be in the left subtree.
 
 #### Python Code Snippet
 ```python
@@ -180,37 +150,117 @@ def find_floor(root: TreeNode, key: int) -> int:
     while current:
         if current.val == key:
             return key
-
-        if key < current.val:
-            current = current.left # Current node is too large
+        if key > current.val:
+            floor = current.val
+            current = current.right
         else:
-            floor = current.val # Potential answer
-            current = current.right # Try to find a larger floor
-
+            current = current.left
     return floor
 ```
 
-#### Tricks/Gotchas
-- **Symmetric Logic:** This problem is a mirror image of finding the ceil. Understand one, and you understand the other.
+---
 
-#### Related Problems
-- 4. Ceil in a Binary Search Tree
+### 6. Insert a given Node in Binary Search Tree
+`[FUNDAMENTAL]` `[EASY]` `#bst` `#modification`
+
+#### Problem Statement
+Given the root of a BST and a value to insert, insert the value into the BST. Return the root of the BST after the insertion. The structure of the tree must be maintained.
+
+#### Implementation Overview
+We traverse the tree to find the correct empty spot for the new node.
+1. Start at the root. If the tree is empty, the new node becomes the root.
+2. Loop until we find an empty spot:
+   - If `val < current.val`, the new node belongs in the left subtree. If `current.left` is null, insert it there. Otherwise, move `current = current.left`.
+   - If `val > current.val`, the new node belongs in the right subtree. If `current.right` is null, insert it there. Otherwise, move `current = current.right`.
+
+#### Python Code Snippet
+```python
+def insert_into_bst(root: TreeNode, val: int) -> TreeNode:
+    if not root:
+        return TreeNode(val)
+
+    current = root
+    while True:
+        if val < current.val:
+            if not current.left:
+                current.left = TreeNode(val)
+                break
+            current = current.left
+        else: # val > current.val (assuming no duplicates)
+            if not current.right:
+                current.right = TreeNode(val)
+                break
+            current = current.right
+
+    return root
+```
+
+---
+
+### 7. Delete a Node in Binary Search Tree
+`[FUNDAMENTAL]` `[MEDIUM]` `#bst` `#modification`
+
+#### Problem Statement
+Given a root node of a BST and a key, delete the node with the given key in the BST. Return the root of the BST after the deletion.
+
+#### Implementation Overview
+This is the most complex foundational operation. First, find the node to delete. Once found, there are three cases:
+1.  **Case 1: Node has 0 children (leaf node).** Simply remove the node by setting its parent's corresponding child pointer to `null`.
+2.  **Case 2: Node has 1 child.** Replace the node with its child by linking the node's parent directly to the node's child.
+3.  **Case 3: Node has 2 children.** This is the tricky case. To maintain the BST property, we must replace the node's value with its **in-order successor** (the smallest value in its right subtree) or its **in-order predecessor** (the largest value in its left subtree).
+    - Find the in-order successor (the minimum value in the right subtree).
+    - Copy the successor's value to the node we want to delete.
+    - Now, the problem is reduced to deleting the successor node from the right subtree (which will fall into Case 1 or 2).
+
+#### Python Code Snippet
+```python
+def delete_node(root: TreeNode, key: int) -> TreeNode:
+    if not root:
+        return None
+
+    if key < root.val:
+        root.left = delete_node(root.left, key)
+    elif key > root.val:
+        root.right = delete_node(root.right, key)
+    else: # key == root.val, this is the node to delete
+        # Case 1 & 2: 0 or 1 child
+        if not root.left:
+            return root.right
+        if not root.right:
+            return root.left
+
+        # Case 3: 2 children
+        # Find the in-order successor (smallest in the right subtree)
+        successor = find_min(root.right)
+        root.val = successor.val
+        # Delete the successor from the right subtree
+        root.right = delete_node(root.right, successor.val)
+
+    return root
+
+# Helper to find the minimum node (in-order successor)
+def find_min(node: TreeNode) -> TreeNode:
+    current = node
+    while current.left:
+        current = current.left
+    return current
+```
 
 ---
 
 ### 10. LCA in Binary Search Tree
-`[MEDIUM]` `#bst` `#traversal` `#lca`
+`[EASY]` `#bst` `#traversal` `#lca`
 
 #### Problem Statement
 Given a Binary Search Tree and two nodes `p` and `q`, find the Lowest Common Ancestor (LCA) of the two nodes. The LCA is defined as the lowest node in the tree that has both `p` and `q` as descendants.
 
 #### Implementation Overview
-Unlike in a regular binary tree, we can find the LCA in a BST very efficiently without recursion on both subtrees, using the BST property.
+Unlike in a regular binary tree, we can find the LCA in a BST very efficiently in O(H) time.
 1.  Start a traversal from the `root`.
-2.  At each `current` node, compare its value with the values of `p` and `q`.
-    -   If both `p.val` and `q.val` are greater than `current.val`, it means both nodes are in the right subtree. The LCA must also be in the right subtree, so we move right: `current = current.right`.
-    -   If both `p.val` and `q.val` are less than `current.val`, it means both nodes are in the left subtree. The LCA must also be in the left subtree, so we move left: `current = current.left`.
-    -   If neither of the above conditions is true, it means the `current` node's value lies between `p.val` and `q.val` (or is equal to one of them). This is the "split point" where the paths to `p` and `q` diverge. Therefore, the `current` node is the LCA.
+2.  At each `current` node, compare its value with `p.val` and `q.val`.
+    -   If both `p.val` and `q.val` are greater than `current.val`, the LCA must be in the right subtree. Move right.
+    -   If both `p.val` and `q.val` are less than `current.val`, the LCA must be in the left subtree. Move left.
+    -   If neither of the above is true, it means the `current` node is the "split point" where the paths to `p` and `q` diverge. This node is the LCA.
 
 #### Python Code Snippet
 ```python
@@ -222,13 +272,7 @@ def lowest_common_ancestor(root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode
         elif p.val < current.val and q.val < current.val:
             current = current.left
         else:
-            # Found the split point, this is the LCA
+            # Found the split point or one of the nodes, this is the LCA
             return current
     return None
 ```
-
-#### Tricks/Gotchas
-- **Efficiency:** This approach has a time complexity of O(H), where H is the height of the tree. This is much better than the standard binary tree LCA algorithm.
-
-#### Related Problems
-- None in this list.

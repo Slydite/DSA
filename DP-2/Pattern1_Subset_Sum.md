@@ -1,108 +1,164 @@
 # Pattern 1: Subset Sum & Partition DP
 
-This pattern is a cornerstone of Dynamic Programming, often compared to the 0/1 Knapsack problem. The fundamental idea is, for each element, we have two choices: either include it in our subset or not. This binary choice structure forms the basis of the recurrence relation. These problems typically ask for the existence of a subset with a certain property, the count of such subsets, or the optimal partition of a set.
+This pattern is a cornerstone of Dynamic Programming, often called **0/1 Knapsack** style problems. The fundamental idea is, for each element, we have two choices: either **include it** in our subset or **not include it**. This binary choice structure forms the basis of the recurrence relation. These problems typically ask for the existence of a subset with a certain property, the count of such subsets, or the optimal partition of a set.
 
 ---
 
-### 1. Subset Sum Equal to Target (DP-14)
+### 1. Subset Sum Equal to Target
 `[MEDIUM]` `#subset-sum` `#0-1-knapsack`
 
 #### Problem Statement
-Given a set of non-negative integers and a value `sum`, determine if there is a subset of the given set with a sum equal to the given `sum`.
+Given a set of non-negative integers `nums` and a value `k`, determine if there is a subset of the given set with a sum equal to `k`.
 
-#### Implementation Overview
--   **DP State:** `dp[i][j]` is a boolean value indicating whether a sum of `j` can be achieved using elements from the first `i` items.
--   **Recurrence Relation:** For each item `nums[i-1]`, we have two choices:
-    1.  **Exclude `nums[i-1]`**: The result is the same as without this item: `dp[i-1][j]`.
-    2.  **Include `nums[i-1]`**: This is possible only if `j >= nums[i-1]`. The result is `dp[i-1][j - nums[i-1]]`.
-    Combining these, `dp[i][j] = dp[i-1][j] || dp[i-1][j - nums[i-1]]`.
--   **Base Cases:** `dp[0][0] = true` (an empty set can form a sum of 0). `dp[i][0] = true` for all `i`.
--   **Space Optimization:** A 2D DP table of `(n+1) x (sum+1)` can be optimized to a 1D DP array of size `(sum+1)`.
+#### Recurrence Relation
+Let `solve(index, target)` be a function that returns true if a subset summing to `target` can be formed using elements from `nums[0...index]`.
+- **Choice 1 (Don't Pick):** If we don't pick `nums[index]`, we need to see if the target can be formed from the remaining elements: `solve(index - 1, target)`.
+- **Choice 2 (Pick):** If we pick `nums[index]`, we need to see if `target - nums[index]` can be formed from the remaining elements: `solve(index - 1, target - nums[index])`.
+- **`solve(index, target) = solve(index-1, target) OR solve(index-1, target - nums[index])`**
+- **Base Case:** `target == 0` is always true. `index < 0` is false if target isn't 0.
+
+---
+#### a) Memoization (Top-Down)
+```python
+def subset_sum_memo(nums: list[int], k: int) -> bool:
+    n = len(nums)
+    dp = [[-1] * (k + 1) for _ in range(n)]
+
+    def solve(index, target):
+        if target == 0:
+            return True
+        if index == 0:
+            return nums[0] == target
+        if dp[index][target] != -1:
+            return dp[index][target]
+
+        not_pick = solve(index - 1, target)
+        pick = False
+        if nums[index] <= target:
+            pick = solve(index - 1, target - nums[index])
+
+        dp[index][target] = not_pick or pick
+        return dp[index][target]
+
+    return solve(n - 1, k)
+```
+- **Time Complexity:** O(n * k). Each state `dp[i][j]` is computed once.
+- **Space Complexity:** O(n * k) for the DP table + O(n) for recursion stack.
+
+---
+#### b) Tabulation (Bottom-Up)
+```python
+def subset_sum_tab(nums: list[int], k: int) -> bool:
+    n = len(nums)
+    dp = [[False] * (k + 1) for _ in range(n)]
+
+    # Base case: target 0 is always possible
+    for i in range(n):
+        dp[i][0] = True
+
+    if nums[0] <= k:
+        dp[0][nums[0]] = True
+
+    for i in range(1, n):
+        for target in range(1, k + 1):
+            not_pick = dp[i-1][target]
+            pick = False
+            if nums[i] <= target:
+                pick = dp[i-1][target - nums[i]]
+            dp[i][target] = not_pick or pick
+
+    return dp[n-1][k]
+```
+- **Time Complexity:** O(n * k).
+- **Space Complexity:** O(n * k).
+
+---
+#### c) Space Optimization
+```python
+def subset_sum_optimized(nums: list[int], k: int) -> bool:
+    n = len(nums)
+    prev_row = [False] * (k + 1)
+    prev_row[0] = True
+
+    if nums[0] <= k:
+        prev_row[nums[0]] = True
+
+    for i in range(1, n):
+        # Iterate backwards to use the results from the 'previous' row (i-1)
+        # before they are overwritten in this pass.
+        for target in range(k, nums[i] - 1, -1):
+            not_pick = prev_row[target]
+            pick = prev_row[target - nums[i]]
+            prev_row[target] = not_pick or pick
+
+    return prev_row[k]
+```
+- **Time Complexity:** O(n * k).
+- **Space Complexity:** O(k).
 
 ---
 
-### 2. Partition Equal Subset Sum (DP-15)
+### 2. Partition Equal Subset Sum
 `[MEDIUM]` `#subset-sum` `#partition`
 
 #### Problem Statement
-Given a non-empty array containing only positive integers, find if the array can be partitioned into two subsets such that the sum of elements in both subsets is equal.
+Given an array `nums`, find if it can be partitioned into two subsets with equal sums.
 
 #### Implementation Overview
-This is a direct application of the Subset Sum problem.
-1.  Calculate the total sum of the array, `totalSum`.
-2.  If `totalSum` is odd, it's impossible to partition it into two equal halves, so return `false`.
-3.  If `totalSum` is even, the problem reduces to finding if there is a subset with a sum equal to `target = totalSum / 2`.
-4.  Solve the "Subset Sum Equal to Target" problem with this `target`.
+This is a direct application of Subset Sum. If the array can be partitioned into two equal sum subsets, the sum of each subset must be `total_sum / 2`.
+1.  Calculate `total_sum`. If it's odd, return `False`.
+2.  The problem becomes: find if there is a subset with sum equal to `target = total_sum / 2`.
+3.  Use any of the Subset Sum solutions above.
+
+#### Python Code Snippet (using optimized Subset Sum)
+```python
+def can_partition(nums: list[int]) -> bool:
+    total_sum = sum(nums)
+    if total_sum % 2 != 0:
+        return False
+
+    return subset_sum_optimized(nums, total_sum // 2)
+```
+- **Time Complexity:** O(n * total_sum).
+- **Space Complexity:** O(total_sum).
 
 ---
 
-### 3. Partition a Set Into Two Subsets With Minimum Absolute Sum Difference (DP-16)
-`[MEDIUM]` `#subset-sum` `#partition` `#optimization`
-
-#### Problem Statement
-Given an array of integers, partition it into two subsets, `S1` and `S2`, such that the absolute difference between their sums is minimized.
-
-#### Implementation Overview
-Let the total sum be `totalSum`. The goal is to minimize `abs(sum(S1) - sum(S2))`.
-We know `sum(S1) + sum(S2) = totalSum`, so `sum(S2) = totalSum - sum(S1)`.
-The expression to minimize becomes `abs(sum(S1) - (totalSum - sum(S1)))` which is `abs(2*sum(S1) - totalSum)`.
-
-To minimize this, `sum(S1)` should be as close to `totalSum / 2` as possible.
-1.  Use the boolean DP table from the "Subset Sum" problem. `dp[j]` will be `true` if a subset with sum `j` is possible.
-2.  Iterate from `j = totalSum / 2` down to `0`.
-3.  The first `j` for which `dp[j]` is `true` gives the `sum(S1)` that is closest to the half-sum.
-4.  Calculate the minimum difference using this `sum(S1)`.
-
----
-
-### 4. Count Subsets with Sum K (DP-17)
-`[MEDIUM]` `#subset-sum` `#count`
-
-#### Problem Statement
-Given an array of integers and a sum `k`, find the number of subsets of the given array with a sum equal to `k`.
-
-#### Implementation Overview
-This is similar to the boolean Subset Sum, but instead of a boolean, `dp[i][j]` stores the *count* of subsets.
--   **DP State:** `dp[i][j]` = number of subsets with sum `j` using the first `i` items.
--   **Recurrence Relation:**
-    -   Exclude `nums[i-1]`: `dp[i-1][j]` ways.
-    -   Include `nums[i-1]`: `dp[i-1][j - nums[i-1]]` ways.
-    The total is the sum: `dp[i][j] = dp[i-1][j] + dp[i-1][j - nums[i-1]]`.
--   **Base Cases:** `dp[0][0] = 1`.
-
-#### Tricks/Gotchas
--   The problem might include `0`s in the array. If an element is `0`, it can be included or excluded. If `nums[i-1] == 0`, the recurrence becomes `dp[i][j] = dp[i-1][j] * 2`. Special handling for this case might be needed depending on the exact problem constraints and how the base cases are set up. A simpler way is to just follow the main recurrence.
-
----
-
-### 5. Count Partitions with Given Difference (DP-18)
+### 3. Count Partitions with Given Difference
 `[MEDIUM]` `#subset-sum` `#partition` `#count`
 
 #### Problem Statement
-Given an array and a difference `diff`, count the number of ways to partition the array into two subsets `S1` and `S2` such that `sum(S1) - sum(S2) = diff`.
+Given an array and a difference `diff`, count the ways to partition it into two subsets `S1` and `S2` such that `sum(S1) - sum(S2) = diff`.
 
 #### Implementation Overview
-This problem can be mathematically reduced to "Count Subsets with Sum K".
-1.  Let `sum(S1)` be `s1` and `sum(S2)` be `s2`. We are given `s1 - s2 = diff`.
-2.  We also know `s1 + s2 = totalSum`.
-3.  Adding the two equations: `2*s1 = totalSum + diff`, which means `s1 = (totalSum + diff) / 2`.
-4.  The problem is now to find the number of subsets that sum up to `s1`.
-5.  This is exactly the "Count Subsets with Sum K" problem, where `K = s1`.
-6.  **Edge cases:** If `totalSum + diff` is odd or `totalSum + diff < 0`, no solution is possible.
+This problem reduces to **Count Subsets with Sum K**.
+1.  We have two equations:
+    - `sum(S1) - sum(S2) = diff`
+    - `sum(S1) + sum(S2) = totalSum`
+2.  Adding them gives `2 * sum(S1) = totalSum + diff`, so `sum(S1) = (totalSum + diff) / 2`.
+3.  The problem is now to count the number of subsets that sum to this `target = (totalSum + diff) / 2`.
+4.  This requires a counting version of the subset sum DP. Let `dp[j]` be the number of ways to make sum `j`. The recurrence is `dp[j] = dp[j] + dp[j - num]`.
 
----
+#### Python Code Snippet
+```python
+def count_partitions_with_diff(nums: list[int], diff: int) -> int:
+    total_sum = sum(nums)
 
-### 6. Target Sum (DP-21)
-`[MEDIUM]` `#subset-sum` `#count`
+    # Edge cases: if target is not an integer or is negative
+    if (total_sum + diff) % 2 != 0 or (total_sum + diff) < 0:
+        return 0
 
-#### Problem Statement
-You are given a list of non-negative integers, `a1, a2, ..., an`, and a target, `S`. Now you have 2 symbols `+` and `-`. For each integer, you should choose one from `+` and `-` as its new symbol. Find out how many ways to assign symbols to make the sum of integers equal to the target `S`.
+    target = (total_sum + diff) // 2
 
-#### Implementation Overview
-This is another variation that reduces to "Count Subsets with Sum K".
-1.  Let the set of numbers with a `+` sign be `P` and the set with a `-` sign be `N`.
-2.  We want `sum(P) - sum(N) = S`.
-3.  We know `sum(P) + sum(N) = totalSum`.
-4.  Adding the two equations gives `2*sum(P) = totalSum + S`.
-5.  So, `sum(P) = (totalSum + S) / 2`.
-6.  The problem is now to find the number of subsets `P` that sum to `(totalSum + S) / 2`. This is again the "Count Subsets with Sum K" problem.
+    # Count subsets with sum = target
+    dp = [0] * (target + 1)
+    dp[0] = 1 # Base case: one way to make sum 0 (empty set)
+    for num in nums:
+        for j in range(target, num - 1, -1):
+            dp[j] += dp[j - num]
+
+    return dp[target]
+```
+- **Time Complexity:** O(n * target).
+- **Space Complexity:** O(target).
+- **Related Problem:** The **Target Sum** problem is an identical variation.

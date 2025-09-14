@@ -14,12 +14,12 @@ Given an array of integers (which can be positive, negative, or zero) and an int
 
 *Example:*
 - **Input:** `arr = [10, 5, 2, 7, 1, 9]`, `K = 15`
-- **Output:** `4` (for subarray `[5, 2, 7, 1]`)
+- **Output:** `4` (The subarray is `[5, 2, 7, 1]`)
 - **Input:** `arr = [-1, 1, 1]`, `K = 1`
-- **Output:** `2` (for subarray `[1, 1]` or `[-1, 1, 1]`, we take `[1,1]` as it is the first longest)
+- **Output:** `2` (The subarray is `[1, 1]`)
 
 #### Implementation Overview
-The sliding window technique fails here because negative numbers disrupt the logic of shrinking/expanding the window based on the sum. The optimal solution uses a hashmap to store prefix sums.
+The sliding window technique fails here because negative numbers disrupt the monotonic nature of the sum. The optimal solution uses a hashmap to store prefix sums.
 1.  Initialize `current_sum = 0`, `max_len = 0`.
 2.  Create a hashmap `prefix_sum_map` to store `{prefix_sum: index}`.
 3.  Iterate through the array with index `i`:
@@ -32,21 +32,20 @@ The sliding window technique fails here because negative numbers disrupt the log
 #### Python Code Snippet
 ```python
 def longest_subarray_with_sum_k_negatives(arr, k):
-    prefix_sum_map = {}
+    prefix_sum_map = {0: -1} # Initialize with sum 0 at index -1 to handle subarrays starting from index 0
     current_sum = 0
     max_len = 0
 
     for i, num in enumerate(arr):
         current_sum += num
 
-        if current_sum == k:
-            max_len = max(max_len, i + 1)
-
         required_sum = current_sum - k
         if required_sum in prefix_sum_map:
             max_len = max(max_len, i - prefix_sum_map[required_sum])
 
         # Store the current prefix sum if it's not already there
+        # We don't update it if it exists because we want the longest subarray,
+        # which means we need the earliest possible start index.
         if current_sum not in prefix_sum_map:
             prefix_sum_map[current_sum] = i
 
@@ -54,7 +53,7 @@ def longest_subarray_with_sum_k_negatives(arr, k):
 ```
 
 #### Tricks/Gotchas
-- **Zero Sum:** Be careful with the case where `K=0`. The logic holds.
+- **Zero Sum Initialization:** Initializing the map with `{0: -1}` elegantly handles cases where the subarray with sum `K` starts from index 0.
 - **Why not update map entry?** For the *longest* subarray, we need the prefix sum that occurred the furthest back in the array, so we never update an existing entry in the map.
 
 #### Related Problems
@@ -65,7 +64,7 @@ def longest_subarray_with_sum_k_negatives(arr, k):
 ---
 
 ### 24. Longest Consecutive Sequence in an Array
-`[EASY]` `#hashing` `#hash-set`
+`[MEDIUM]` `#hashing` `#hash-set`
 
 #### Problem Statement
 Given an unsorted array of integers, find the length of the longest consecutive elements sequence. The sequence can be in any order in the input array.
@@ -75,16 +74,16 @@ Given an unsorted array of integers, find the length of the longest consecutive 
 - **Output:** `4` (The longest consecutive sequence is `[1, 2, 3, 4]`)
 
 #### Implementation Overview
-A naive solution is to sort the array (O(N log N)) and then iterate. The optimal O(N) solution uses a hash set.
+A naive solution is to sort the array (O(N log N)) and then iterate. The optimal O(N) solution uses a hash set for fast lookups.
 1.  Insert all elements of the array into a hash set for O(1) average time lookups.
 2.  Initialize `max_length = 0`.
-3.  Iterate through each number `num` in the original array (or the set).
+3.  Iterate through each number `num` in the set.
 4.  For each `num`, check if `num - 1` exists in the hash set.
-    -   If `num - 1` **is** in the set, it means `num` is not the start of a consecutive sequence, so we can ignore it and continue to the next number. This is the key optimization.
+    -   If `num - 1` **is** in the set, it means `num` is not the start of a consecutive sequence, so we can skip it. This is the key optimization.
     -   If `num - 1` **is not** in the set, then `num` is the potential start of a sequence.
 5.  If we've found a start, we begin counting. Initialize `current_length = 1` and `current_num = num`.
 6.  In a `while` loop, check if `current_num + 1` exists in the set. If it does, increment `current_length` and `current_num`.
-7.  After the loop, update `max_length = max(max_length, current_length)`.
+7.  After the inner loop, update `max_length = max(max_length, current_length)`.
 
 #### Python Code Snippet
 ```python
@@ -119,7 +118,7 @@ def longest_consecutive_sequence(nums):
 ---
 
 ### 28. Count subarrays with given sum
-`[EASY]` `#hashing` `#prefix-sum`
+`[MEDIUM]` `#hashing` `#prefix-sum`
 
 #### Problem Statement
 Given an array of integers and an integer `K`, find the total number of continuous subarrays whose sum equals `K`.
@@ -158,7 +157,7 @@ def subarray_sum_count(nums, k):
 ```
 
 #### Tricks/Gotchas
-- **`{0: 1}` Initialization:** Forgetting to initialize the map with a prefix sum of 0 having a frequency of 1 is the most common mistake. It correctly counts subarrays that start from the beginning of the array.
+- **`{0: 1}` Initialization:** Forgetting to initialize the map with a prefix sum of 0 having a frequency of 1 is the most common mistake. It correctly counts subarrays that start from the beginning of the array whose sum is exactly `K`.
 
 #### Related Problems
 - 14. Longest subarray with sum K (Positives + Negatives)
@@ -191,15 +190,12 @@ This is a direct application of the "Longest subarray with sum K" pattern, where
 #### Python Code Snippet
 ```python
 def largest_subarray_with_zero_sum(arr):
-    prefix_sum_map = {}
+    prefix_sum_map = {0: -1} # Initialize with sum 0 at index -1
     current_sum = 0
     max_len = 0
 
     for i, num in enumerate(arr):
         current_sum += num
-
-        if current_sum == 0:
-            max_len = max(max_len, i + 1)
 
         if current_sum in prefix_sum_map:
             max_len = max(max_len, i - prefix_sum_map[current_sum])
@@ -211,7 +207,7 @@ def largest_subarray_with_zero_sum(arr):
 ```
 
 #### Tricks/Gotchas
-- **Identical Logic:** This is exactly problem #14 with `K=0`. Recognizing this pattern is key.
+- **Identical Logic:** This is exactly problem #14 with `K=0`. Recognizing this pattern is key. The `{0: -1}` initialization handles cases where the longest zero-sum subarray starts from index 0.
 
 #### Related Problems
 - 14. Longest subarray with sum K (Positives + Negatives)
@@ -220,14 +216,14 @@ def largest_subarray_with_zero_sum(arr):
 ---
 
 ### 34. Count number of subarrays with given xor K
-`[HARD]` `#hashing` `#prefix-xor`
+`[MEDIUM]` `#hashing` `#prefix-xor`
 
 #### Problem Statement
 Given an array of integers and an integer `K`, find the total number of subarrays with a bitwise XOR of all elements equal to `K`.
 
 *Example:*
 - **Input:** `arr = [4, 2, 2, 6, 4]`, `K = 6`
-- **Output:** `4` (Subarrays are `[4, 2]`, `[4, 2, 2, 6, 4]`, `[2, 2, 6]`, and `[6]`)
+- **Output:** `4` (Subarrays are `[6]`, `[4, 2]`, `[2, 2, 6]`, and `[4, 2, 2, 6, 4]`)
 
 #### Implementation Overview
 This problem is analogous to "Count subarrays with given sum," but it uses the properties of XOR instead of arithmetic sum.
@@ -269,7 +265,7 @@ def subarrays_with_xor_k(arr, k):
 ---
 
 ### 37. Find the repeating and missing number
-`[HARD]` `#hashing` `#math` `#bitwise`
+`[MEDIUM]` `#hashing` `#math` `#bitwise`
 
 #### Problem Statement
 You are given a read-only array of `N` integers from 1 to `N`. One number is repeated twice, and one number is missing. Find these two numbers.
@@ -285,7 +281,7 @@ There are several ways to solve this (math equations, XOR), but a hash-based app
 3.  After populating the map, iterate from `1` to `N`.
 4.  Check the frequency of each number `i` in this range:
     -   If the frequency of `i` is `2`, then `i` is the repeating number.
-    -   If the frequency of `i` is `0` (or `i` is not in the map), then `i` is the missing number.
+    -   If `i` is not in the map, then `i` is the missing number.
 5.  This approach takes O(N) time and O(N) space.
 
 #### Python Code Snippet
@@ -298,10 +294,10 @@ def find_repeating_and_missing(arr):
 
     repeating, missing = -1, -1
     for i in range(1, n + 1):
-        if i in counts:
-            if counts[i] == 2:
-                repeating = i
-        else:
+        count = counts.get(i, 0)
+        if count == 2:
+            repeating = i
+        elif count == 0:
             missing = i
 
     return repeating, missing

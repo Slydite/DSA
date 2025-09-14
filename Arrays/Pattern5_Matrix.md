@@ -25,6 +25,8 @@ A naive solution using an auxiliary matrix would take O(M*N) space. A better sol
 #### Python Code Snippet
 ```python
 def set_matrix_zeros(matrix):
+    if not matrix:
+        return
     m, n = len(matrix), len(matrix[0])
     first_row_has_zero = any(matrix[0][j] == 0 for j in range(n))
     first_col_has_zero = any(matrix[i][0] == 0 for i in range(m))
@@ -36,7 +38,7 @@ def set_matrix_zeros(matrix):
                 matrix[i][0] = 0
                 matrix[0][j] = 0
 
-    # Set zeros for the rest of the matrix
+    # Set zeros for the rest of the matrix based on markers
     for i in range(1, m):
         for j in range(1, n):
             if matrix[i][0] == 0 or matrix[0][j] == 0:
@@ -54,7 +56,7 @@ def set_matrix_zeros(matrix):
 
 #### Tricks/Gotchas
 - **O(1) Space Constraint:** The main challenge is achieving O(1) extra space. Using the matrix's own first row/column is the key trick.
-- **Order of Operations:** You must process the first row/column's status *before* using them as markers, otherwise you lose information.
+- **Order of Operations:** You must process the first row/column's status *before* using them as markers, otherwise you lose information when you start overwriting them.
 
 #### Related Problems
 - None in this list.
@@ -77,8 +79,6 @@ The most intuitive in-place solution involves a two-step process:
     - After transpose: `[[1,4,7],[2,5,8],[3,6,9]]`
 2.  **Reverse each row:** After transposing, iterate through each row of the matrix and reverse it.
     - Reversing the first row `[1,4,7]` gives `[7,4,1]`.
-    - Reversing the second row `[2,5,8]` gives `[8,5,2]`.
-    - Reversing the third row `[3,6,9]` gives `[9,6,3]`.
     - This yields the final rotated matrix.
 
 #### Python Code Snippet
@@ -97,7 +97,9 @@ def rotate_matrix(matrix):
 ```
 
 #### Tricks/Gotchas
-- **Clockwise vs. Counter-Clockwise:** The described method is for a clockwise rotation. For a counter-clockwise rotation, you would transpose the matrix and then reverse each *column*.
+- **Clockwise vs. Counter-Clockwise:**
+    - **Clockwise (current solution):** Transpose, then reverse each row.
+    - **Counter-Clockwise:** Reverse each row, then transpose. Or, transpose then reverse each column.
 - **In-place:** The solution modifies the matrix directly without creating a new one.
 
 #### Related Problems
@@ -147,13 +149,13 @@ def spiral_order(matrix):
             result.append(matrix[i][right])
         right -= 1
 
-        # Traverse Left (check boundaries)
+        # Traverse Left (check boundaries to handle non-square matrices)
         if top <= bottom:
             for j in range(right, left - 1, -1):
                 result.append(matrix[bottom][j])
             bottom -= 1
 
-        # Traverse Up (check boundaries)
+        # Traverse Up (check boundaries to handle non-square matrices)
         if left <= right:
             for i in range(bottom, top - 1, -1):
                 result.append(matrix[i][left])
@@ -166,12 +168,12 @@ def spiral_order(matrix):
 - **Boundary Checks:** The checks `if top <= bottom` and `if left <= right` before the last two traversals are crucial for non-square matrices (e.g., a single row or column) to prevent duplicate printing.
 
 #### Related Problems
-- None in this list.
+- Spiral Matrix II
 
 ---
 
 ### 29. Pascal's Triangle
-`[MEDIUM]` `#matrix` `#dp` `#simulation`
+`[EASY]` `#matrix` `#dp` `#simulation`
 
 #### Problem Statement
 Given an integer `numRows`, generate the first `numRows` of Pascal's Triangle. In Pascal's triangle, each number is the sum of the two numbers directly above it.
@@ -214,8 +216,8 @@ def generate_pascal_triangle(numRows):
 ```
 
 #### Tricks/Gotchas
-- **Problem Variations:** Be aware of variations that ask for only a specific row (`get_row(rowIndex)`) or a single value. The logic can be adapted for those.
+- **Problem Variations:** A common variation is "Pascal's Triangle II," which asks for *only* the `k`-th row. This can be solved with O(k) space by only storing the previous row to generate the current one.
 - **Off-by-one errors:** Indexing into the `previous_row` requires care. The loop for middle elements runs `len(prev_row) - 1` times.
 
 #### Related Problems
-- None in this list.
+- Pascal's Triangle II
